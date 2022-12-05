@@ -1,0 +1,30 @@
+
+
+
+table, th, td {
+    text-align: center;
+    border: solid;
+    background-image: radial-gradient(to bottom right, #ADDDFF,#DBB67F)
+}
+
+
+
+body {
+    background-image: radial-gradient(#45708F, #8F6B36);
+    color:navajowhite
+}
+
+th{
+    text-align:center;
+    padding-left:20px;
+    padding-right:20px;
+}
+
+.headerTitle{
+    font-size: 28px;
+    font-style:oblique;
+}
+
+.rowElements{
+    font-size:20px;
+}

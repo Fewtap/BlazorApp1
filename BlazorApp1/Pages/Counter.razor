@@ -1,0 +1,20 @@
+﻿@page "/counter"
+
+
+
+<h1>Increment</h1>
+
+<p id="">@Amount</p>
+<button @ontimeupdate="Increment">Click this button</button>
+
+@code{
+	private int Amount = 0;
+
+	[Parameter]
+	public int IncrementAmount { get; set; } = 1;
+
+	void Increment()
+	{
+		Amount+= IncrementAmount;
+	}
+}

@@ -1,0 +1,142 @@
+﻿@using System.Threading;
+@using Newtonsoft.Json;
+@using RestSharp;
+@implements IDisposable
+
+@page "/"
+
+
+<PageTitle>Index</PageTitle>
+
+<h1 style="text-align:center; margin:20px;">Departures  @timeString</h1>
+
+<table width="800" style="margin-left:auto; margin-right:auto;">
+    <thead>
+        <tr style="text-align: inherit;">
+            <th class="headerTitle">Route</th>
+            <th class="headerTitle">Destination</th>
+            <th class="headerTitle">Planned</th>
+            <th class="headerTitle">Estimated</th>
+            <th class="headerTitle">Status</th> 
+            <th class="headerTitle">Bus Departure</th>
+        </tr>
+    </thead>
+    <tbody width="800">
+
+        @{
+            if (flights != null)
+            {
+                foreach (var flight in flights)
+                {
+                    if(flight.Planned.Date > DateTime.Now.Date)
+                    {
+                        continue;
+                    }
+                    if(flight.Planned.Subtract(TimeSpan.FromMinutes(90)) < DateTime.Now)
+                    {
+                        if(flight.Estimated != null)
+                        {
+                            DateTime estimated = (DateTime)flight.Estimated;
+                            if(estimated.Subtract(TimeSpan.FromMinutes(90)) < DateTime.Now)
+                            {
+                                continue;
+                            }
+                        }
+                        else
+                        {
+                            continue;
+                        }
+                    }
+                    DateTime estimatedDate;
+                    string estimatedString;
+
+                    if(flight.Estimated != null)
+                    {
+                        
+                    }
+                    <tr style="text-align: inherit;">
+                        <th class="rowElements">@flight.Rute</th>
+                        <th class="rowElements">@flight.ArrivalAirport</th>
+                        <th class="rowElements">@flight.Planned.ToShortTimeString()</th>
+                        @if(flight.Estimated == null)
+                        {
+                            <th class="rowElements">@flight.Estimated</th>
+                        }
+                        else
+                        {
+                            estimatedDate = (DateTime)flight.Estimated;
+                            estimatedString = estimatedDate.ToShortTimeString();
+                            <th class="rowElements">@estimatedString</th>
+                        }
+                        <th class="rowElements">@flight.Status.en</th>
+                        @if(flight.Estimated != null)
+                        {
+                            estimatedDate = (DateTime)flight.Estimated;
+                            <th class="rowElements">@estimatedDate.Subtract(TimeSpan.FromMinutes(90)).ToShortTimeString()</th>
+                        }
+                        else
+                        {
+                            <th class="rowElements">@flight.Planned.Subtract(TimeSpan.FromMinutes(90)).ToShortTimeString()</th>
+                        }
+                    </tr>
+                    
+                }
+            }
+
+        }
+    </tbody>
+</table>
+
+<iframe style="padding:10px; margin-left:auto; margin-right:auto; display:block;" height="650" width="950"src="https://embed.windy.com/embed2.html?lat=67.776&lon=-51.196&detailLat=69.225&detailLon=-51.416&width=900&height=900&zoom=5&level=surface&overlay=temp&product=ecmwf&menu=&message=&marker=true&calendar=12&pressure=&type=map&location=coordinates&detail=true&metricWind=m%2Fs&metricTemp=default&radarRange=-1" frameborder="0"></iframe>
+
+
+@code {
+    string timeString = DateTime.Now.ToLongTimeString();
+    Timer ShowTimeTimer;
+    Timer UpdateFlightsTimer;
+    public List<Flight> flights;
+    public int i = 0;
+
+    protected override void OnInitialized()
+    {
+        ShowTimeTimer = new Timer(UpdateTime, null, 0, 1);
+        UpdateFlightsTimer = new Timer(UpdateFlights, null, 0, 5000);
+
+
+    }
+
+    void UpdateTime(object _)
+    {
+
+        timeString = DateTime.Now.ToLongTimeString();
+        InvokeAsync(StateHasChanged);
+    }
+
+    async void UpdateFlights(object _)
+    {
+        string url = "https://www.mit.gl/wp-content/themes/mitgl/webservice.php?type=Departures&icao=BGJN";
+        RestClient client = new RestClient();
+
+        RestRequest request = new RestRequest(url, Method.Get);
+
+        RestResponse response = await client.ExecuteAsync(request);
+
+        flights = JsonConvert.DeserializeObject<List<Flight>>(response.Content);
+
+        i++;
+
+
+
+
+    }
+
+    public void Dispose()
+    {
+        ShowTimeTimer.Dispose();
+        UpdateFlightsTimer.Dispose();
+    }
+
+    
+}
+
+    
