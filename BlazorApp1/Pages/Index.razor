@@ -1,6 +1,7 @@
 ﻿@using System.Threading;
 @using Newtonsoft.Json;
 @using RestSharp;
+
 @implements IDisposable
 
 @page "/"
@@ -8,9 +9,10 @@
 
 <PageTitle>Index</PageTitle>
 
-<h1 style="text-align:center; margin:20px;">Departures  @timeString</h1>
 
-<table width="800" style="margin-left:auto; margin-right:auto;">
+	<h1 style="text-align:center; margin:20px; padding-top:200px;">Departures  @timeString</h1>
+
+<table width="600" style="margin-left:auto; margin-right:auto; padding">
     <thead>
         <tr style="text-align: inherit;">
             <th class="headerTitle">Route</th>
@@ -21,7 +23,7 @@
             <th class="headerTitle">Bus Departure</th>
         </tr>
     </thead>
-    <tbody width="800">
+    <tbody>
 
         @{
             if (flights != null)
@@ -57,9 +59,9 @@
 
                         }
                         <tr style="text-align: inherit;">
-                            <th class="rowElements">@flight.Rute</th>
-                            <th class="rowElements">@flight.ArrivalAirport</th>
-                            <th class="rowElements">@flight.Planned.ToShortTimeString()</th>
+                            <td class="rowElements">@flight.Rute</td>
+                            <td class="rowElements">@flight.ArrivalAirport</td>
+                            <td class="rowElements">@flight.Planned.ToShortTimeString()</td>
                             @if (flight.Estimated == null)
                             {
                                 <th class="rowElements">@flight.Estimated</th>
@@ -68,17 +70,17 @@
                             {
                                 estimatedDate = (DateTime)flight.Estimated;
                                 estimatedString = estimatedDate.ToShortTimeString();
-                                <th class="rowElements">@estimatedString</th>
+                                <td class="rowElements">@estimatedString</td>
                             }
-                            <th class="rowElements">@flight.Status.en</th>
+                            <td class="rowElements">@flight.Status.en</td>
                             @if (flight.Estimated != null)
                             {
                                 estimatedDate = (DateTime)flight.Estimated;
-                                <th class="rowElements">@estimatedDate.Subtract(TimeSpan.FromMinutes(90)).ToShortTimeString()</th>
+                                <td class="rowElements">@estimatedDate.Subtract(TimeSpan.FromMinutes(90)).ToShortTimeString()</td>
                             }
                             else
                             {
-                                <th class="rowElements">@flight.Planned.Subtract(TimeSpan.FromMinutes(90)).ToShortTimeString()</th>
+                                <td class="rowElements">@flight.Planned.Subtract(TimeSpan.FromMinutes(90)).ToShortTimeString()</td>
                             }
                         </tr>
 
@@ -134,7 +136,7 @@
     </tbody>
 </table>
 
-<iframe style="padding:10px; margin-left:auto; margin-right:auto; display:block;" height="650" width="950"src="https://embed.windy.com/embed2.html?lat=67.776&lon=-51.196&detailLat=69.225&detailLon=-51.416&width=900&height=900&zoom=5&level=surface&overlay=temp&product=ecmwf&menu=&message=&marker=true&calendar=12&pressure=&type=map&location=coordinates&detail=true&metricWind=m%2Fs&metricTemp=default&radarRange=-1" frameborder="0"></iframe>
+<iframe style="padding-top:50px; margin-left:auto; margin-right:auto; display:block;" height="650" width="900"src="https://embed.windy.com/embed2.html?lat=67.776&lon=-51.196&detailLat=69.225&detailLon=-51.416&width=900&height=900&zoom=5&level=surface&overlay=temp&product=ecmwf&menu=&message=&marker=true&calendar=12&pressure=&type=map&location=coordinates&detail=true&metricWind=m%2Fs&metricTemp=default&radarRange=-1" frameborder="0"></iframe>
 
 
 @code {
@@ -147,7 +149,7 @@
     protected override void OnInitialized()
     {
         ShowTimeTimer = new Timer(UpdateTime, null, 0, 1);
-        UpdateFlightsTimer = new Timer(UpdateFlights, null, 0, 20000);
+        UpdateFlightsTimer = new Timer(UpdateFlights, null, 0, 300000);
 
 
     }

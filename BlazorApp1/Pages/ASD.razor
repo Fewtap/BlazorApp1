@@ -1,0 +1,41 @@
+﻿@page "/test"
+@using System.Diagnostics;
+
+
+<h1>Input Databinding test</h1>
+<select name="Rute">
+    
+</select>
+<input id="dateInput" type="date" @bind-value=date />
+    <input @bind=value/>
+<p>@value</p>
+
+
+@code {
+
+    string? value;
+    Timer timer;
+    DateTime date;
+
+    protected override void OnInitialized()
+    {
+        timer = new Timer(Debugging, null, 0, 20);
+        date = DateTime.Now;
+
+    }
+
+    public void Debugging(object _)
+    {
+        if(value != null)
+        {
+            Debug.WriteLine(value);
+        }
+        
+    }
+
+}
+
+
+
+
+

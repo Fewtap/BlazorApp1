@@ -22,5 +22,14 @@
         public string da { get; set; }
     }
 
+    public class FlightData
+    {
+        static List<Flight> Flights;
+        public FlightData()
+        {
+            
+        }
+    }
+
 
 }
