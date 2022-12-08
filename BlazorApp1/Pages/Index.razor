@@ -26,64 +26,111 @@
         @{
             if (flights != null)
             {
-                foreach (var flight in flights)
+                if(flights.Exists(f => f.Planned.Day == DateTime.Now.Day && f.Planned.TimeOfDay > DateTime.Now.TimeOfDay))
                 {
-                    if(flight.Planned.Date > DateTime.Now.Date)
+                    foreach (var flight in flights)
                     {
-                        continue;
-                    }
-                    if(flight.Planned.Subtract(TimeSpan.FromMinutes(90)) < DateTime.Now)
-                    {
-                        if(flight.Estimated != null)
+                        if (flight.Planned.Date > DateTime.Now.Date)
                         {
-                            DateTime estimated = (DateTime)flight.Estimated;
-                            if(estimated.Subtract(TimeSpan.FromMinutes(90)) < DateTime.Now)
+                            continue;
+                        }
+                        if (flight.Planned.Subtract(TimeSpan.FromMinutes(90)) < DateTime.Now)
+                        {
+                            if (flight.Estimated != null)
+                            {
+                                DateTime estimated = (DateTime)flight.Estimated;
+                                if (estimated.Subtract(TimeSpan.FromMinutes(90)) < DateTime.Now)
+                                {
+                                    continue;
+                                }
+                            }
+                            else
                             {
                                 continue;
                             }
                         }
-                        else
-                        {
-                            continue;
-                        }
-                    }
-                    DateTime estimatedDate;
-                    string estimatedString;
+                        DateTime estimatedDate;
+                        string estimatedString;
 
-                    if(flight.Estimated != null)
-                    {
-                        
+                        if (flight.Estimated != null)
+                        {
+
+                        }
+                        <tr style="text-align: inherit;">
+                            <th class="rowElements">@flight.Rute</th>
+                            <th class="rowElements">@flight.ArrivalAirport</th>
+                            <th class="rowElements">@flight.Planned.ToShortTimeString()</th>
+                            @if (flight.Estimated == null)
+                            {
+                                <th class="rowElements">@flight.Estimated</th>
+                            }
+                            else
+                            {
+                                estimatedDate = (DateTime)flight.Estimated;
+                                estimatedString = estimatedDate.ToShortTimeString();
+                                <th class="rowElements">@estimatedString</th>
+                            }
+                            <th class="rowElements">@flight.Status.en</th>
+                            @if (flight.Estimated != null)
+                            {
+                                estimatedDate = (DateTime)flight.Estimated;
+                                <th class="rowElements">@estimatedDate.Subtract(TimeSpan.FromMinutes(90)).ToShortTimeString()</th>
+                            }
+                            else
+                            {
+                                <th class="rowElements">@flight.Planned.Subtract(TimeSpan.FromMinutes(90)).ToShortTimeString()</th>
+                            }
+                        </tr>
+
                     }
-                    <tr style="text-align: inherit;">
-                        <th class="rowElements">@flight.Rute</th>
-                        <th class="rowElements">@flight.ArrivalAirport</th>
-                        <th class="rowElements">@flight.Planned.ToShortTimeString()</th>
-                        @if(flight.Estimated == null)
-                        {
-                            <th class="rowElements">@flight.Estimated</th>
-                        }
-                        else
-                        {
-                            estimatedDate = (DateTime)flight.Estimated;
-                            estimatedString = estimatedDate.ToShortTimeString();
-                            <th class="rowElements">@estimatedString</th>
-                        }
-                        <th class="rowElements">@flight.Status.en</th>
-                        @if(flight.Estimated != null)
-                        {
-                            estimatedDate = (DateTime)flight.Estimated;
-                            <th class="rowElements">@estimatedDate.Subtract(TimeSpan.FromMinutes(90)).ToShortTimeString()</th>
-                        }
-                        else
-                        {
-                            <th class="rowElements">@flight.Planned.Subtract(TimeSpan.FromMinutes(90)).ToShortTimeString()</th>
-                        }
-                    </tr>
-                    
                 }
-            }
+                else
+                {
+                    var tomorrowsFlights = flights.FindAll(f => f.Planned.Day > DateTime.Now.Day);
 
-        }
+                    foreach (var flight in tomorrowsFlights)
+                    {
+
+
+                        DateTime estimatedDate;
+                        string estimatedString;
+
+                        if (flight.Estimated != null)
+                        {
+
+                        }
+                        <tr style="text-align: inherit;">
+                            <th class="rowElements">@flight.Rute</th>
+                            <th class="rowElements">@flight.ArrivalAirport</th>
+                            <th class="rowElements">@flight.Planned.ToLongDateString()</th>
+                            @if (flight.Estimated == null)
+                            {
+                                <th class="rowElements">@flight.Estimated</th>
+                            }
+                            else
+                            {
+                                estimatedDate = (DateTime)flight.Estimated;
+                                estimatedString = estimatedDate.ToShortTimeString();
+                                <th class="rowElements">@estimatedString</th>
+                            }
+                            <th class="rowElements">@flight.Status.en</th>
+                            @if (flight.Estimated != null)
+                            {
+                                estimatedDate = (DateTime)flight.Estimated;
+                                <th class="rowElements">@estimatedDate.Subtract(TimeSpan.FromMinutes(90)).ToShortTimeString()</th>
+                            }
+                            else
+                            {
+                                <th class="rowElements">@flight.Planned.Subtract(TimeSpan.FromMinutes(90)).ToShortTimeString()</th>
+                            }
+                        </tr>
+                    }
+                }
+
+            }
+            
+    }
+        
     </tbody>
 </table>
 
@@ -100,7 +147,7 @@
     protected override void OnInitialized()
     {
         ShowTimeTimer = new Timer(UpdateTime, null, 0, 1);
-        UpdateFlightsTimer = new Timer(UpdateFlights, null, 0, 5000);
+        UpdateFlightsTimer = new Timer(UpdateFlights, null, 0, 20000);
 
 
     }
@@ -120,6 +167,8 @@
         RestRequest request = new RestRequest(url, Method.Get);
 
         RestResponse response = await client.ExecuteAsync(request);
+
+        
 
         flights = JsonConvert.DeserializeObject<List<Flight>>(response.Content);
 
