@@ -28,7 +28,7 @@
         @{
             if (FlightData.Flights != null)
             {
-                if (FlightData.Flights.Exists(f => f.Planned.Day == DateTime.Now.Day && f.Planned.TimeOfDay > DateTime.Now.Subtract(Timespan.FromHours(3)))
+                if (FlightData.Flights.Exists(f => f.Planned.Day == DateTime.Now.Day && f.Planned.TimeOfDay > DateTime.Now.Subtract(Timespan.FromHours(3)));
                 {
                     foreach (var flight in FlightData.Flights)
                     {
