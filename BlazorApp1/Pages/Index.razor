@@ -12,7 +12,7 @@
 
 	<h1 style="text-align:center; margin:20px; padding-top:200px;">Departures  @timeString</h1>
 
-<table width="600" style="margin-left:auto; margin-right:auto; padding">
+<table width="600" style="margin-left:auto; margin-right:auto;">
     <thead>
         <tr style="text-align: inherit;">
             <th class="headerTitle">Route</th>
@@ -26,22 +26,22 @@
     <tbody>
 
         @{
-            if (flights != null)
+            if (FlightData.Flights != null)
             {
-                if(flights.Exists(f => f.Planned.Day == DateTime.Now.Day && f.Planned.TimeOfDay > DateTime.Now.TimeOfDay))
+                if (FlightData.Flights.Exists(f => f.Planned.Day == DateTime.Now.Day && f.Planned.TimeOfDay > DateTime.Now.Subtract(Timespan.FromHours(3)))
                 {
-                    foreach (var flight in flights)
+                    foreach (var flight in FlightData.Flights)
                     {
                         if (flight.Planned.Date > DateTime.Now.Date)
                         {
                             continue;
                         }
-                        if (flight.Planned.Subtract(TimeSpan.FromMinutes(90)) < DateTime.Now)
+                        if (flight.Planned.Subtract(TimeSpan.FromMinutes(90)) < DateTime.Now.Subtract(TimeSpan.FromHours(3)))
                         {
                             if (flight.Estimated != null)
                             {
                                 DateTime estimated = (DateTime)flight.Estimated;
-                                if (estimated.Subtract(TimeSpan.FromMinutes(90)) < DateTime.Now)
+                                if (estimated.Subtract(TimeSpan.FromMinutes(90)) < DateTime.Now.Subtract(TimeSpan.FromHours(3)))
                                 {
                                     continue;
                                 }
@@ -88,7 +88,7 @@
                 }
                 else
                 {
-                    var tomorrowsFlights = flights.FindAll(f => f.Planned.Day > DateTime.Now.Day);
+                    var tomorrowsFlights = FlightData.Flights.FindAll(f => f.Planned.Day > DateTime.Now.Day);
 
                     foreach (var flight in tomorrowsFlights)
                     {
@@ -143,7 +143,7 @@
     string timeString = DateTime.Now.ToLongTimeString();
     Timer ShowTimeTimer;
     Timer UpdateFlightsTimer;
-    public List<Flight> flights;
+
     public int i = 0;
 
     protected override void OnInitialized()
@@ -152,29 +152,22 @@
         UpdateFlightsTimer = new Timer(UpdateFlights, null, 0, 300000);
 
 
+
+
     }
 
     void UpdateTime(object _)
     {
+        timeString = DateTime.UtcNow.Subtract(TimeSpan.FromHours(3)).ToLongTimeString();
 
-        timeString = DateTime.Now.ToLongTimeString();
         InvokeAsync(StateHasChanged);
     }
 
     async void UpdateFlights(object _)
     {
-        string url = "https://www.mit.gl/wp-content/themes/mitgl/webservice.php?type=Departures&icao=BGJN";
-        RestClient client = new RestClient();
-
-        RestRequest request = new RestRequest(url, Method.Get);
-
-        RestResponse response = await client.ExecuteAsync(request);
-
         
+        await FlightData.GetFlights();
 
-        flights = JsonConvert.DeserializeObject<List<Flight>>(response.Content);
-
-        i++;
 
 
 

@@ -1,37 +1,96 @@
 ﻿@page "/test"
 @using System.Diagnostics;
+@using System.ComponentModel;
+@implements IDisposable;
 
 
 <h1>Input Databinding test</h1>
-<select name="Rute">
-    
+<select @bind="RuteString">
+    @foreach (var flight in FlightData.Flights.FindAll(f => f.Planned.Date == selectedDate.Date))
+    {
+        <option value="@flight.Rute">@flight.Rute</option>
+    }
 </select>
-<input id="dateInput" type="date" @bind-value=date />
-    <input @bind=value/>
-<p>@value</p>
+<input id="dateInput" type="date" @bind-value=selectedDate />
+    <input @bind=roomString @onfocusout="AddRooms"/>
+@if(SelectedFlight != null)
+{
+    <h1>@SelectedFlight.Rute<br />@SelectedFlight.Planned.ToShortDateString()<br />@SelectedFlight.Planned.ToShortTimeString()</h1>
+
+    @if(FlightData.InfoList != null)
+    {
+        foreach (var infoContainer in FlightData.InfoList)
+        {
+            if(infoContainer.Rooms.Count != 0)
+            {
+                string rooms = infoContainer.Rooms.ToString();
+
+            }
+        }
+    }
+
+
+
+}
+
 
 
 @code {
+    string? value = "NULL";
+    public Timer timer;
+    string RuteString = "NULL";
+    Flight SelectedFlight;
+    DateTime selectedDate = DateTime.UtcNow.Subtract(TimeSpan.FromHours(3)).AddDays(1);
+    string roomString;
 
-    string? value;
-    Timer timer;
-    DateTime date;
-
-    protected override void OnInitialized()
+    protected async override void OnInitialized()
     {
-        timer = new Timer(Debugging, null, 0, 20);
-        date = DateTime.Now;
+        timer = new Timer(UpdatePage, null, 0, 20);
 
-    }
 
-    public void Debugging(object _)
-    {
-        if(value != null)
+        string title = "Getting Data";
+        if(FlightData.Flights.Count == 0)
         {
-            Debug.WriteLine(value);
+            Console.WriteLine(FlightData.Flights.Count.ToString());
+            await FlightData.GetFlights();
+            InvokeAsync(StateHasChanged);
+
         }
-        
+
+        SelectedFlight = FlightData.Flights.First(f => f.Planned.Date == selectedDate.Date);
+        RuteString = SelectedFlight.Rute;
+
+
     }
+
+    void AddRooms()
+    {
+        FlightData.InfoList.Find(i => i.Planned == SelectedFlight.Planned && i.Rute == SelectedFlight.Rute).Rooms.Add(roomString);
+        InvokeAsync(StateHasChanged);
+    }
+
+    void SelectionChanged()
+    {
+
+
+
+    }
+
+    void UpdatePage(object _)
+    {
+        SelectedFlight = FlightData.Flights.Find(f => f.Rute == RuteString && f.Planned.Date == selectedDate.Date);
+
+        InvokeAsync(StateHasChanged);
+    }
+
+    
+
+    public void Dispose()
+    {
+        timer.Dispose();
+    }
+
+    
 
 }
 
