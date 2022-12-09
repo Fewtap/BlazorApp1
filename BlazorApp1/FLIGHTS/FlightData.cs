@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using RestSharp;
+using System;
 
 namespace BlazorApp1
 {
@@ -22,7 +23,12 @@ namespace BlazorApp1
         public Flight()
         {
             DeparturingRooms = new List<string>();
+            
+            
+            
         }
+
+        
     }
 
     public class Status
@@ -51,7 +57,7 @@ namespace BlazorApp1
         }
         public static bool IsGettingData { get; set;} = false;
         public static List<DepartureInfo> InfoList { get; set; } = new List<DepartureInfo>();
-        public static List<Flight> Flights { get; set; } = new List<Flight>();
+        public static List<Flight> Flights { get; set; }
 
         public static async Task<List<Flight>> GetFlights()
         {
@@ -73,10 +79,20 @@ namespace BlazorApp1
 
 
             Flights = JsonConvert.DeserializeObject<List<Flight>>(response.Content);
+
+            
             foreach (var flight in Flights)
             {
+                flight.Planned = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(flight.Planned, "Greenland Standard Time");
+                if(flight.Estimated != null)
+                {
+                    flight.Estimated = TimeZoneInfo.ConvertTimeBySystemTimeZoneId((DateTime)flight.Estimated, "Greenland Standard Time");
+                }
+
+                Console.WriteLine(flight.Planned.ToShortTimeString());
                 InfoList.Add(new DepartureInfo(flight));
             }
+            
             IsGettingData = false;
             return Flights.ToList();
 

@@ -12,7 +12,7 @@
 
 	<h1 style="text-align:center; margin:20px; padding-top:200px;">Departures  @timeString</h1>
 
-<table width="600" style="margin-left:auto; margin-right:auto;">
+<table style="margin-left:auto; margin-right:auto;">
     <thead>
         <tr style="text-align: inherit;">
             <th class="headerTitle">Route</th>
@@ -28,7 +28,7 @@
         @{
             if (FlightData.Flights != null)
             {
-                if (FlightData.Flights.Exists(f => f.Planned.Day == DateTime.Now.Day && f.Planned.TimeOfDay > DateTime.Now.Subtract(Timespan.FromHours(3)));
+                if (FlightData.Flights.Exists(f => f.Planned.Day == DateTime.Now.Day && f.Planned.TimeOfDay > DateTime.Now.Subtract(TimeSpan.FromHours(3)).TimeOfDay))
                 {
                     foreach (var flight in FlightData.Flights)
                     {
@@ -86,10 +86,13 @@
 
                     }
                 }
-                else
+            }
+            else
+            {
+                List<Flight> tomorrowsFlights;
+                if(FlightData.Flights != null)
                 {
-                    var tomorrowsFlights = FlightData.Flights.FindAll(f => f.Planned.Day > DateTime.Now.Day);
-
+                    tomorrowsFlights = FlightData.Flights.FindAll(f => f.Planned.Day > DateTime.Now.Day);
                     foreach (var flight in tomorrowsFlights)
                     {
 
@@ -128,10 +131,20 @@
                         </tr>
                     }
                 }
+                else
+                {
+                    tomorrowsFlights = null;
+                }
+
+
+                
+
+                
+            }
 
             }
             
-    }
+    
         
     </tbody>
 </table>
@@ -158,7 +171,8 @@
 
     void UpdateTime(object _)
     {
-        timeString = DateTime.UtcNow.Subtract(TimeSpan.FromHours(3)).ToLongTimeString();
+        DateTime GreenlandTime = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(DateTime.UtcNow, "Greenland Standard Time");
+        timeString = GreenlandTime.ToLongTimeString();
 
         InvokeAsync(StateHasChanged);
     }
