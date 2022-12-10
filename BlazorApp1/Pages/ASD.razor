@@ -5,7 +5,6 @@
 
 
 
-<InputDate Value=""></InputDate>
 
 <select @onchange="FlightChanged">
     @foreach (var flight in FlightData.Flights.FindAll(f => f.Planned.Date == selectedDate.Date))
