@@ -7,6 +7,8 @@ namespace BlazorApp1
     // Root myDeserializedClass = JsonConvert.DeserializeObject<List<Root>>(myJsonResponse);
     public class Flight
     {
+        
+
         public string Rute { get; set; }
         public string DepartureAirport { get; set; }
         public string ArrivalAirport { get; set; }
@@ -20,6 +22,8 @@ namespace BlazorApp1
 
         public List<string> DeparturingRooms { get; set; }
 
+        
+
         public Flight()
         {
             DeparturingRooms = new List<string>();
@@ -29,6 +33,7 @@ namespace BlazorApp1
         }
 
         
+
     }
 
     public class Status
@@ -40,23 +45,9 @@ namespace BlazorApp1
 
     public class FlightData
     {
-        public struct DepartureInfo
-        {
-            public string Rute { get; set; }
-            public string ArrivalAirport { get; set; }
-            public DateTime Planned { get; set; }
-            public List<string> Rooms { get; set; } = new List<string>();
-
-            public DepartureInfo(Flight flight)
-            {
-                Rute = flight.Rute;
-                ArrivalAirport= flight.ArrivalAirport;
-                Planned = flight.Planned;
-
-            }
-        }
+        
         public static bool IsGettingData { get; set;} = false;
-        public static List<DepartureInfo> InfoList { get; set; } = new List<DepartureInfo>();
+        
         public static List<Flight> Flights { get; set; }
 
         public static async Task<List<Flight>> GetFlights()
@@ -90,7 +81,7 @@ namespace BlazorApp1
                 }
 
                 Console.WriteLine(flight.Planned.ToShortTimeString());
-                InfoList.Add(new DepartureInfo(flight));
+                
             }
             
             IsGettingData = false;

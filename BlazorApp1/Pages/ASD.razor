@@ -4,44 +4,26 @@
 @implements IDisposable;
 
 
-<h1>Input Databinding test</h1>
-<select @bind="RuteString">
+
+<InputDate Value=""></InputDate>
+
+<select @onchange="FlightChanged">
     @foreach (var flight in FlightData.Flights.FindAll(f => f.Planned.Date == selectedDate.Date))
     {
-        <option value="@flight.Rute">@flight.Rute</option>
+        <option value="@flight.Rute">@flight.ArrivalAirport</option>
     }
 </select>
-<input id="dateInput" type="date" @bind-value=selectedDate />
-    <input @bind=roomString @onfocusout="AddRooms"/>
-@if(SelectedFlight != null)
-{
-    <h1>@SelectedFlight.Rute<br />@SelectedFlight.Planned.ToShortDateString()<br />@SelectedFlight.Planned.ToShortTimeString()</h1>
-
-    @if(FlightData.InfoList != null)
-    {
-        foreach (var infoContainer in FlightData.InfoList)
-        {
-            if(infoContainer.Rooms.Count != 0)
-            {
-                string rooms = infoContainer.Rooms.ToString();
-
-            }
-        }
-    }
 
 
-
-}
-
-
-
-@code {
-    string? value = "NULL";
+    @code {
+        string? value = "NULL";
     public Timer timer;
-    string RuteString = "NULL";
+    string RuteString;
+
     Flight SelectedFlight;
     DateTime selectedDate = DateTime.UtcNow.Subtract(TimeSpan.FromHours(3)).AddDays(1);
     string roomString;
+    InputDate<DateTime> help = new InputDate<DateTime>();
 
     protected async override void OnInitialized()
     {
@@ -63,22 +45,31 @@
 
     }
 
-    void AddRooms()
-    {
-        FlightData.InfoList.Find(i => i.Planned == SelectedFlight.Planned && i.Rute == SelectedFlight.Rute).Rooms.Add(roomString);
-        InvokeAsync(StateHasChanged);
-    }
 
-    void SelectionChanged()
+
+    void FlightChanged(ChangeEventArgs args)
     {
 
-
+        SelectedFlight = FlightData.Flights.Find(f => f.Planned.Date == selectedDate.Date && f.Rute == args.Value.ToString());
+        
 
     }
+
+    void DateChanged(ChangeEventArgs args)
+    {
+        selectedDate = DateTime.Parse(args.Value.ToString());
+        Console.WriteLine(selectedDate.ToShortDateString());
+    }
+
+
 
     void UpdatePage(object _)
     {
-        SelectedFlight = FlightData.Flights.Find(f => f.Rute == RuteString && f.Planned.Date == selectedDate.Date);
+        if(SelectedFlight != null)
+        {
+            //Console.WriteLine(SelectedFlight.ArrivalAirport);
+        }
+        
 
         InvokeAsync(StateHasChanged);
     }

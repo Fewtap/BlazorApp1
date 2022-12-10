@@ -28,7 +28,8 @@
         @{
             if (FlightData.Flights != null)
             {
-                if (FlightData.Flights.Exists(f => f.Planned.Day == DateTime.Now.Day && f.Planned.TimeOfDay > DateTime.Now.Subtract(TimeSpan.FromHours(3)).TimeOfDay))
+                DateTime GreenlandTime = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(DateTime.UtcNow, "Greenland Standard Time");
+                if (FlightData.Flights.Exists(f => f.Planned.Day == GreenlandTime.Day && f.Planned.TimeOfDay > GreenlandTime.TimeOfDay))
                 {
                     foreach (var flight in FlightData.Flights)
                     {
@@ -149,7 +150,7 @@
     </tbody>
 </table>
 
-<iframe style="padding-top:50px; margin-left:auto; margin-right:auto; display:block;" height="650" width="900"src="https://embed.windy.com/embed2.html?lat=67.776&lon=-51.196&detailLat=69.225&detailLon=-51.416&width=900&height=900&zoom=5&level=surface&overlay=temp&product=ecmwf&menu=&message=&marker=true&calendar=12&pressure=&type=map&location=coordinates&detail=true&metricWind=m%2Fs&metricTemp=default&radarRange=-1" frameborder="0"></iframe>
+<!--<iframe style="padding-top:50px; margin-left:auto; margin-right:auto; display:block;" height="650" width="900"src="https://embed.windy.com/embed2.html?lat=67.776&lon=-51.196&detailLat=69.225&detailLon=-51.416&width=900&height=900&zoom=5&level=surface&overlay=temp&product=ecmwf&menu=&message=&marker=true&calendar=12&pressure=&type=map&location=coordinates&detail=true&metricWind=m%2Fs&metricTemp=default&radarRange=-1" frameborder="0"></iframe>-->
 
 
 @code {
