@@ -28,6 +28,7 @@
         @{
             if (FlightData.Flights != null)
             {
+                
                 DateTime GreenlandTime = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(DateTime.UtcNow, "Greenland Standard Time");
                 if (FlightData.Flights.Exists(f => f.Planned.Day == GreenlandTime.Day && f.Planned.TimeOfDay > GreenlandTime.TimeOfDay))
                 {

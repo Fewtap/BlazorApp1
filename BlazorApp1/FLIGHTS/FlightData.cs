@@ -4,6 +4,18 @@ using System;
 
 namespace BlazorApp1
 {
+
+    public struct Room
+    {
+        public string RoomNumber { get; set; }
+        public string FlightHash { get; set; }
+
+        public Room(string _rn, string _fh)
+        {
+            RoomNumber = _rn;
+            FlightHash = _fh;
+        }
+    }
     // Root myDeserializedClass = JsonConvert.DeserializeObject<List<Root>>(myJsonResponse);
     public class Flight
     {
@@ -35,6 +47,8 @@ namespace BlazorApp1
         
 
     }
+
+
 
     public class Status
     {
@@ -91,9 +105,34 @@ namespace BlazorApp1
            
         }
 
-        
 
-        
+        public static async Task PostRoom(Room data)
+        {
+            // Set the URL of the API
+            var url = "http://localhost:5000/api/data";
+
+            // Create a new RestClient
+            var client = new RestClient();
+
+            // Create a new RestRequest
+            var request = new RestRequest(url, Method.Post);
+
+            // Set the request content type to JSON
+            request.AddHeader("Content-Type", "application/json");
+
+            // Serialize the struct to a JSON string
+            var json = JsonConvert.SerializeObject(data);
+
+            // Add the JSON string to the request body
+            request.AddParameter("application/json", json, ParameterType.RequestBody);
+
+            // Send the request and get the response
+            var response = await client.ExecuteAsync(request);
+
+            // Print the response
+            Console.WriteLine(response.Content);
+        }
+
 
     }
 }

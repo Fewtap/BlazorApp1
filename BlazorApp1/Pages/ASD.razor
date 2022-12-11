@@ -44,25 +44,32 @@
 @code {
     string InputValue;
     void UpdateInputValue(ChangeEventArgs e)
-{
-    // Update the InputValue property with the latest input value
-    InputValue = e.Value.ToString();
-}
-
-void SubmitEvent(KeyboardEventArgs e)
-{
-    if (e.Key == "Enter" && !string.IsNullOrEmpty(InputValue))
     {
-        // Add the input value to the DeparturingRooms property of the selected flight
-        SelectedFlight.DeparturingRooms.AddRange(InputValue.Split(','));
-
-        // Clear the input field
-        InputValue = "";
-
-        // Update the component to reflect the changes
-        InvokeAsync(StateHasChanged);
+        // Update the InputValue property with the latest input value
+        InputValue = e.Value.ToString();
     }
-}
+
+    void SubmitEvent(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !string.IsNullOrEmpty(InputValue))
+        {
+            // Add the input value to the DeparturingRooms property of the selected flight
+            SelectedFlight.DeparturingRooms.AddRange(InputValue.Split(','));
+
+            // Clear the input field
+            InputValue = "";
+
+            // Update the component to reflect the changes
+            InvokeAsync(StateHasChanged);
+
+            
+            var room = new Room(InputValue, SelectedFlight.FlightHash);
+            FlightData.PostRoom(room);
+            
+        }
+
+        
+    }
 
 
 }
