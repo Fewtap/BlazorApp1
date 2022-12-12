@@ -24,19 +24,21 @@ namespace FlightData
         public string ArrivalAirport { get; set; }
         public DateTime Planned { get; set; }
         public DateTime? Estimated { get; set; }
-        public object Actual { get; set; }
         public Status Status { get; set; }
+        public string status_kl { get; set; }
+        public string status_en { get; set; }
+        public string status_da { get; set; }
         public string FlightHash { get; set; }
         public string ArrivalICAO { get; set; }
         public string DepartureICAO { get; set; }
 
-        public List<string> DeparturingRooms { get; set; }
+        
 
         
 
         public Flight()
         {
-            DeparturingRooms = new List<string>();
+            
             
             
             
@@ -129,6 +131,32 @@ namespace FlightData
 
             // Print the response
             Console.WriteLine(response.Content);
+        }
+
+        public async Task<List<Flight>> GetRooms(DateTime date)
+        {
+            // Set the URL of the API
+            var url = $"http://localhost:5000/flights?date={date.ToString("d/MM/yyyy")}";
+
+            // Create a new RestClient
+            var client = new RestClient();
+
+            // Create a new RestRequest
+            var request = new RestRequest(url, Method.Post);
+
+            // Set the request content type to JSON
+            request.AddHeader("Content-Type", "application/json");
+
+            
+            
+
+            
+
+            // Send the request and get the response
+            var response = await client.ExecuteAsync(request);
+
+            // Print the response
+            return JsonConvert.DeserializeObject<List<Flight>>(response.Content); 
         }
 
 
