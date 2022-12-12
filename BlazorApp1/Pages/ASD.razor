@@ -10,7 +10,7 @@
 <select @onchange="FlightChanged">
     @foreach (var flight in FlightData.Flights.FindAll(f => f.Planned.Date == selectedDate.Date))
     {
-        <option value="@flight.Rute">@flight.ArrivalAirport</option>
+        <option value="@flight.FlightHash">@flight.Rute</option>
     }
 </select>
 
@@ -85,7 +85,7 @@
     string RuteString;
     DateTime selectedDate;
     Flight SelectedFlight;
-    
+    List<Flight> flights;
     string roomString;
     InputDate<DateTime> help = new InputDate<DateTime>();
 
@@ -93,6 +93,7 @@
     {
         timer = new Timer(UpdatePage, null, 0, 20);
         selectedDate = DateTime.UtcNow.Subtract(TimeSpan.FromHours(3)).AddDays(1);
+        flights = await new FlightData().GetRooms(selectedDate);
 
         string title = "Getting Data";
         while(FlightData.Flights == null)
@@ -107,7 +108,7 @@
 
         }
 
-        SelectedFlight = FlightData.Flights.First(f => f.Planned.Date == selectedDate.Date);
+        SelectedFlight = FlightData.Flights.First();
         RuteString = SelectedFlight.Rute;
         if (SelectedFlight != null)
         {
