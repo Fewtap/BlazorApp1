@@ -1,10 +1,8 @@
 ﻿using Newtonsoft.Json;
 using RestSharp;
-using System;
 
-namespace BlazorApp1
+namespace FlightData
 {
-
     public struct Room
     {
         public string RoomNumber { get; set; }
@@ -16,7 +14,7 @@ namespace BlazorApp1
             FlightHash = _fh;
         }
     }
-    // Root myDeserializedClass = JsonConvert.DeserializeObject<List<Root>>(myJsonResponse);
+// Root myDeserializedClass = JsonConvert.DeserializeObject<List<Root>>(myJsonResponse);
     public class Flight
     {
         
@@ -66,13 +64,13 @@ namespace BlazorApp1
 
         public static async Task<List<Flight>> GetFlights()
         {
-            if (FlightData.IsGettingData)
+            if (IsGettingData)
             {
                 return null;
             }
             else
             {
-                FlightData.IsGettingData = true;
+                IsGettingData = true;
             }
             string url = "https://www.mit.gl/wp-content/themes/mitgl/webservice.php?type=Departures&icao=BGJN";
             RestClient client = new RestClient();

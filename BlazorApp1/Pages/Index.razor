@@ -1,7 +1,5 @@
 ﻿@using System.Threading;
-@using Newtonsoft.Json;
-@using RestSharp;
-
+@using FlightData;
 @implements IDisposable
 
 @page "/"
@@ -10,7 +8,7 @@
 <PageTitle>Index</PageTitle>
 
 
-	<h1 style="text-align:center; margin:20px; padding-top:200px;">Departures  @timeString</h1>
+	<h1 style="text-align:center; margin:20px; padding-top:200px;">Departures  @_timeString</h1>
 
 <table style="margin-left:auto; margin-right:auto;">
     <thead>
@@ -29,8 +27,8 @@
             if (FlightData.Flights != null)
             {
                 
-                DateTime GreenlandTime = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(DateTime.UtcNow, "Greenland Standard Time");
-                if (FlightData.Flights.Exists(f => f.Planned.Day == GreenlandTime.Day && f.Planned.TimeOfDay > GreenlandTime.TimeOfDay))
+                DateTime greenlandTime = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(DateTime.UtcNow, "Greenland Standard Time");
+                if (FlightData.Flights.Exists(f => f.Planned.Day == greenlandTime.Day && f.Planned.TimeOfDay > greenlandTime.TimeOfDay))
                 {
                     foreach (var flight in FlightData.Flights)
                     {
@@ -135,7 +133,7 @@
                 }
                 else
                 {
-                    tomorrowsFlights = null;
+                    
                 }
 
 
@@ -155,16 +153,16 @@
 
 
 @code {
-    string timeString = DateTime.Now.ToLongTimeString();
-    Timer ShowTimeTimer;
-    Timer UpdateFlightsTimer;
+    string _timeString = DateTime.Now.ToLongTimeString();
+    Timer _showTimeTimer = null!;
+    Timer? _updateFlightsTimer;
 
-    public int i = 0;
+    //Write a fucntion that returns a Flight object
 
     protected override void OnInitialized()
     {
-        ShowTimeTimer = new Timer(UpdateTime, null, 0, 1);
-        UpdateFlightsTimer = new Timer(UpdateFlights, null, 0, 300000);
+        _showTimeTimer = new Timer(UpdateTime!, null, 0, 1);
+        _updateFlightsTimer = new Timer(UpdateFlights!, null, 0, 300000);
 
 
 
@@ -173,8 +171,9 @@
 
     void UpdateTime(object _)
     {
-        DateTime GreenlandTime = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(DateTime.UtcNow, "Greenland Standard Time");
-        timeString = GreenlandTime.ToLongTimeString();
+        DateTime greenlandTime;
+        greenlandTime = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(DateTime.UtcNow, "Greenland Standard Time");
+        _timeString = greenlandTime.ToLongTimeString();
 
         InvokeAsync(StateHasChanged);
     }
@@ -192,8 +191,8 @@
 
     public void Dispose()
     {
-        ShowTimeTimer.Dispose();
-        UpdateFlightsTimer.Dispose();
+        _showTimeTimer.Dispose();
+        _updateFlightsTimer.Dispose();
     }
 
     
