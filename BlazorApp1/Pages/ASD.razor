@@ -1,43 +1,28 @@
 ﻿@page "/test"
 @using Microsoft.AspNetCore.Components
 @using FlightData;
+@using Syncfusion.Blazor;
 @implements IDisposable;
 
 
 <input type="date" @onchange="DateChanged" value="@_selectedDate.ToString("yyyy-MM-dd")"/>
 
 <select @onchange="FlightChanged">
-    @foreach (var flight in FlightData.Flights.FindAll(f => f.Planned.Date == _selectedDate.Date))
+    @if(flights != null)
     {
-        <option value="@flight.Rute">@flight.ArrivalAirport</option>
+        foreach (var flight in flights.FindAll(f => f.Planned.Date == _selectedDate.Date))
+        {
+            <option value="@flight.Rute">@flight.ArrivalAirport</option>
+        }
     }
+    
 </select>
 
 
 <input type="text" @bind="InputValue" @oninput="UpdateInputValue" @onkeydown="SubmitEvent" placeholder="Enter room numbers, separated by commas"/>
 
 
-<table style="margin-top: 20px;">
-    <thead>
-    <tr>
-        <th>Route</th>
-        <th>Departure Airport</th>
-        <th>Departuring Rooms</th>
-        <th>Planned Departure</th>
-    </tr>
-    </thead>
-    <tbody>
-    @foreach (var flight in FlightData.Flights.Where(f => f.Planned.Date == _selectedDate.Date && f.DeparturingRooms.Any()))
-    { 
-        <tr>
-            <td>@flight.Rute</td>
-            <td>@flight.ArrivalAirport</td>
-            <td>@string.Join(", ", flight.DeparturingRooms)</td>
-            <td>@flight.Planned.ToShortTimeString()</td>
-        </tr>
-    }
-    </tbody>
-</table>
+
 
 @code {
     string InputValue = "";
@@ -52,18 +37,17 @@
     {
         if (e.Key == "Enter" && !string.IsNullOrEmpty(InputValue))
         {
-    // Add the input value to the DeparturingRooms property of the selected flight
-            _selectedFlight.DeparturingRooms.AddRange(InputValue.Split(','));
-
-    // Clear the input field
-            InputValue = "";
+			var rooms = InputValue.Split(',').Select(r => r.Trim()).ToList();
+			var flight = flights.Find(f => f.FlightHash == _selectedFlight.FlightHash);
+			
+			InputValue = "";
+		}
 
     // Update the component to reflect the changes
             InvokeAsync(StateHasChanged);
 
 
-            var room = new Room(InputValue, _selectedFlight.FlightHash);
-            FlightData.PostRoom(room);
+            
         }
     }
 
@@ -81,28 +65,27 @@
     string _ruteString = "";
     DateTime _selectedDate = DateTime.Now;
     Flight _selectedFlight = new();
-
+    List<Flight> flights = null!;
+    FlightDB flightDB = new();
     string _roomString;
     InputDate<DateTime> help = new();
 
     protected override async void OnInitialized()
     {
+        flights = await FlightDB.GetFlights();
         timer = new Timer(UpdatePage, null, 0, 20);
         _selectedDate = DateTime.UtcNow.Subtract(TimeSpan.FromHours(3)).AddDays(1);
 
         var title = "Getting Data";
-        while (FlightData.Flights == null)
-        {
-            await Task.Delay(20);
-        }
-        if (FlightData.Flights.Count == 0)
-        {
-            Console.WriteLine(FlightData.Flights.Count.ToString());
-            await FlightData.GetFlights();
-            InvokeAsync(StateHasChanged);
-        }
 
-        _selectedFlight = FlightData.Flights.First(f => f.Planned.Date == _selectedDate.Date);
+
+
+        
+
+        InvokeAsync(StateHasChanged);
+        
+
+        _selectedFlight = flights.First(f => f.Planned.Date == _selectedDate.Date);
         _ruteString = _selectedFlight.Rute;
         if (_selectedFlight != null)
         {
@@ -113,7 +96,7 @@
 
     void FlightChanged(ChangeEventArgs args)
     {
-        _selectedFlight = FlightData.Flights.Find(f => f.Planned.Date == _selectedDate.Date && f.Rute == args.Value.ToString());
+        _selectedFlight = flights.Find(f => f.Planned.Date == _selectedDate.Date && f.Rute == args.Value.ToString());
         if (_selectedFlight != null)
         {
             Console.WriteLine(_selectedFlight.Rute + " " + _selectedFlight.ArrivalAirport);
@@ -123,7 +106,7 @@
     void DateChanged(ChangeEventArgs args)
     {
         _selectedDate = DateTime.Parse(args.Value.ToString());
-        _selectedFlight = FlightData.Flights.First(f => f.Planned.Date == _selectedDate.Date);
+        _selectedFlight = flights.First(f => f.Planned.Date == _selectedDate.Date);
         Console.WriteLine(_selectedDate.ToShortDateString());
         if (_selectedFlight != null)
         {

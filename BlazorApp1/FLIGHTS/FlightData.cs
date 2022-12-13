@@ -56,12 +56,12 @@ namespace FlightData
         public string da { get; set; }
     }
 
-    public class FlightData
+    public class FlightDB
     {
         
         public static bool IsGettingData { get; set;} = false;
         
-        public static List<Flight> Flights { get; set; }
+        
 
         public static async Task<List<Flight>> GetFlights()
         {
@@ -82,7 +82,7 @@ namespace FlightData
 
 
 
-            Flights = JsonConvert.DeserializeObject<List<Flight>>(response.Content);
+            var Flights = JsonConvert.DeserializeObject<List<Flight>>(response.Content);
 
             
             foreach (var flight in Flights)

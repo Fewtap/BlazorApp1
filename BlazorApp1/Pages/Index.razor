@@ -24,13 +24,13 @@
     <tbody>
 
         @{
-            if (FlightData.Flights != null)
+            if (flights != null)
             {
                 
                 DateTime greenlandTime = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(DateTime.UtcNow, "Greenland Standard Time");
-                if (FlightData.Flights.Exists(f => f.Planned.Day == greenlandTime.Day && f.Planned.TimeOfDay > greenlandTime.TimeOfDay))
+                if (flights.Exists(f => f.Planned.Day == greenlandTime.Day && f.Planned.TimeOfDay > greenlandTime.TimeOfDay))
                 {
-                    foreach (var flight in FlightData.Flights)
+                    foreach (var flight in flights)
                     {
                         if (flight.Planned.Date > DateTime.Now.Date)
                         {
@@ -72,7 +72,7 @@
                                 estimatedString = estimatedDate.ToShortTimeString();
                                 <td class="rowElements">@estimatedString</td>
                             }
-                            <td class="rowElements">@flight.Status.en</td>
+                            <td class="rowElements">@flight.status_en</td>
                             @if (flight.Estimated != null)
                             {
                                 estimatedDate = (DateTime)flight.Estimated;
@@ -90,9 +90,9 @@
             else
             {
                 List<Flight> tomorrowsFlights;
-                if(FlightData.Flights != null)
+                if(flights != null)
                 {
-                    tomorrowsFlights = FlightData.Flights.FindAll(f => f.Planned.Day > DateTime.Now.Day);
+                    tomorrowsFlights = flights.FindAll(f => f.Planned.Day > DateTime.Now.Day);
                     foreach (var flight in tomorrowsFlights)
                     {
 
@@ -118,7 +118,7 @@
                                 estimatedString = estimatedDate.ToShortTimeString();
                                 <th class="rowElements">@estimatedString</th>
                             }
-                            <th class="rowElements">@flight.Status.en</th>
+                            <th class="rowElements">@flight.status_en</th>
                             @if (flight.Estimated != null)
                             {
                                 estimatedDate = (DateTime)flight.Estimated;
@@ -156,14 +156,15 @@
     string _timeString = DateTime.Now.ToLongTimeString();
     Timer _showTimeTimer = null!;
     Timer? _updateFlightsTimer;
+    List<Flight> flights = null!;
 
     //Write a fucntion that returns a Flight object
 
-    protected override void OnInitialized()
+    protected override async void OnInitialized()
     {
         _showTimeTimer = new Timer(UpdateTime!, null, 0, 1);
         _updateFlightsTimer = new Timer(UpdateFlights!, null, 0, 300000);
-
+        flights = await FlightDB.GetFlights();
 
 
 
@@ -181,7 +182,7 @@
     async void UpdateFlights(object _)
     {
         
-        await FlightData.GetFlights();
+        flights = await FlightDB.GetFlights();
 
 
 
