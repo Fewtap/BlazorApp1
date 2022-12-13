@@ -1,5 +1,6 @@
 ﻿@using System.Threading;
 @using FlightData;
+@using Syncfusion.Blazor.Diagrams
 @implements IDisposable
 
 @page "/"
@@ -26,22 +27,22 @@
         @{
             if (flights != null)
             {
-                
+
                 DateTime greenlandTime = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(DateTime.UtcNow, "Greenland Standard Time");
                 if (flights.Exists(f => f.Planned.Day == greenlandTime.Day && f.Planned.TimeOfDay > greenlandTime.TimeOfDay))
                 {
                     foreach (var flight in flights)
                     {
-                        if (flight.Planned.Date > DateTime.Now.Date)
+                        if (flight.Planned.Date > DateTime.Now.AddHours(-3).Date)
                         {
                             continue;
                         }
-                        if (flight.Planned.Subtract(TimeSpan.FromMinutes(90)) < DateTime.Now.Subtract(TimeSpan.FromHours(3)))
+                        if (flight.Planned.Subtract(TimeSpan.FromMinutes(90)) < DateTime.Now.AddHours(-3))
                         {
                             if (flight.Estimated != null)
                             {
                                 DateTime estimated = (DateTime)flight.Estimated;
-                                if (estimated.Subtract(TimeSpan.FromMinutes(90)) < DateTime.Now.Subtract(TimeSpan.FromHours(3)))
+                                if (estimated.Subtract(TimeSpan.FromMinutes(90)) < DateTime.Now.AddHours(-3))
                                 {
                                     continue;
                                 }
@@ -72,7 +73,7 @@
                                 estimatedString = estimatedDate.ToShortTimeString();
                                 <td class="rowElements">@estimatedString</td>
                             }
-                            <td class="rowElements">@flight.status_en</td>
+                            <td class="rowElements">@flight.StatusEn</td>
                             @if (flight.Estimated != null)
                             {
                                 estimatedDate = (DateTime)flight.Estimated;
@@ -87,62 +88,9 @@
                     }
                 }
             }
-            else
-            {
-                List<Flight> tomorrowsFlights;
-                if(flights != null)
-                {
-                    tomorrowsFlights = flights.FindAll(f => f.Planned.Day > DateTime.Now.Day);
-                    foreach (var flight in tomorrowsFlights)
-                    {
+        }
 
-
-                        DateTime estimatedDate;
-                        string estimatedString;
-
-                        if (flight.Estimated != null)
-                        {
-
-                        }
-                        <tr style="text-align: inherit;">
-                            <th class="rowElements">@flight.Rute</th>
-                            <th class="rowElements">@flight.ArrivalAirport</th>
-                            <th class="rowElements">@flight.Planned.ToLongDateString()</th>
-                            @if (flight.Estimated == null)
-                            {
-                                <th class="rowElements">@flight.Estimated</th>
-                            }
-                            else
-                            {
-                                estimatedDate = (DateTime)flight.Estimated;
-                                estimatedString = estimatedDate.ToShortTimeString();
-                                <th class="rowElements">@estimatedString</th>
-                            }
-                            <th class="rowElements">@flight.status_en</th>
-                            @if (flight.Estimated != null)
-                            {
-                                estimatedDate = (DateTime)flight.Estimated;
-                                <th class="rowElements">@estimatedDate.Subtract(TimeSpan.FromMinutes(90)).ToShortTimeString()</th>
-                            }
-                            else
-                            {
-                                <th class="rowElements">@flight.Planned.Subtract(TimeSpan.FromMinutes(90)).ToShortTimeString()</th>
-                            }
-                        </tr>
-                    }
-                }
-                else
-                {
-                    
-                }
-
-
-                
-
-                
-            }
-
-            }
+    
             
     
         
@@ -153,7 +101,7 @@
 
 
 @code {
-    string _timeString = DateTime.Now.ToLongTimeString();
+    string _timeString = DateTime.Now.AddHours(-3).ToLongTimeString();
     Timer _showTimeTimer = null!;
     Timer? _updateFlightsTimer;
     List<Flight> flights = null!;
@@ -162,41 +110,57 @@
 
     protected override async void OnInitialized()
     {
-        _showTimeTimer = new Timer(UpdateTime!, null, 0, 1);
-        _updateFlightsTimer = new Timer(UpdateFlights!, null, 0, 300000);
-        flights = await FlightDB.GetFlights();
+        _showTimeTimer = new Timer(UpdateTime!, null, 0, 1000);
+        _updateFlightsTimer = new Timer(UpdateFlights!, null, 0, 1000);
+        while (FlightDB.IsGettingData)
+        {
+            await Task.Delay(100);
+            flights = await FlightDB.GetFlights(DateTime.Now.AddHours(-3));
 
 
 
+        }
     }
 
     void UpdateTime(object _)
-    {
-        DateTime greenlandTime;
-        greenlandTime = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(DateTime.UtcNow, "Greenland Standard Time");
-        _timeString = greenlandTime.ToLongTimeString();
+        {
+            DateTime greenlandTime;
+            greenlandTime = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(DateTime.UtcNow, "Greenland Standard Time");
+            _timeString = greenlandTime.ToLongTimeString();
 
-        InvokeAsync(StateHasChanged);
-    }
+            InvokeAsync(StateHasChanged);
+        }
 
-    async void UpdateFlights(object _)
-    {
-        
-        flights = await FlightDB.GetFlights();
+        int i = 0;
+        List<Flight>? newFlights;
+
+        async void UpdateFlights(object _)
+        {
+             if(FlightDB.IsGettingData)
+            {
+                return;
+                
+            }
+            newFlights = await FlightDB.GetFlights(DateTime.Now.AddHours(-3));
+
+            if (newFlights != null)
+            {
+                flights = newFlights;
+            }
 
 
 
 
 
-    }
+        }
 
-    public void Dispose()
-    {
-        _showTimeTimer.Dispose();
-        _updateFlightsTimer.Dispose();
-    }
+        public void Dispose()
+        {
+            _showTimeTimer.Dispose();
+            _updateFlightsTimer.Dispose();
+        }
+
 
     
+
 }
-
-    

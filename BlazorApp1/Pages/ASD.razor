@@ -38,8 +38,14 @@
         if (e.Key == "Enter" && !string.IsNullOrEmpty(InputValue))
         {
 			var rooms = InputValue.Split(',').Select(r => r.Trim()).ToList();
+            Console.WriteLine(rooms.Count.ToString());
 			var flight = flights.Find(f => f.FlightHash == _selectedFlight.FlightHash);
-			
+            List<Room> roomstoinsert = new List<Room>();
+            foreach (var room in rooms)
+            {
+                roomstoinsert.Add(new Room(room, flight.FlightHash));
+            }
+            Task.Run(() => FlightDB.PostRoom(roomstoinsert));
 			InputValue = "";
 		}
 
@@ -69,14 +75,23 @@
     FlightDB flightDB = new();
     string _roomString;
     InputDate<DateTime> help = new();
+    List<Flight> newflights;
 
     protected override async void OnInitialized()
     {
-        flights = await FlightDB.GetFlights();
+        var title = "Getting Data";
         timer = new Timer(UpdatePage, null, 0, 20);
         _selectedDate = DateTime.UtcNow.Subtract(TimeSpan.FromHours(3)).AddDays(1);
+        while (FlightDB.IsGettingData)
+        {
+            await Task.Delay(100);
+            
 
-        var title = "Getting Data";
+
+
+        }
+        flights = await FlightDB.GetFlights(_selectedDate);
+        
 
 
 
@@ -115,11 +130,18 @@
     }
 
 
-    void UpdatePage(object _)
+    async void UpdatePage(object _)
     {
-        if (_selectedFlight != null)
+        if (FlightDB.IsGettingData)
         {
-    //Console.WriteLine(SelectedFlight.ArrivalAirport);
+            return;
+        }
+
+        List<Flight> newFlights;
+        newFlights = await FlightDB.GetFlights(_selectedDate);
+        if(newFlights != null)
+        {
+            flights = newFlights;
         }
 
 
