@@ -24,7 +24,6 @@ namespace FlightData
         public string ArrivalAirport { get; set; }
         public DateTime Planned { get; set; }
         public DateTime? Estimated { get; set; }
-        public Status Status { get; set; }
         public string status_kl { get; set; }
         public string status_en { get; set; }
         public string status_da { get; set; }
