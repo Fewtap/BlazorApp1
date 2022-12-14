@@ -1,9 +1,14 @@
-﻿using Newtonsoft.Json;
+﻿using FlightData;
+using Newtonsoft.Json;
 using RestSharp;
+using Syncfusion.Blazor.DropDowns;
+using Syncfusion.Blazor.Lists.Internal;
+using System.ComponentModel;
+using System.Security.Cryptography;
 
 namespace FlightData
 {
-    public struct Room
+    public class Room
     {
         public string RoomNumber { get; set; }
         public string FlightHash { get; set; }
@@ -53,14 +58,14 @@ namespace FlightData
 
 
 
-    
+
 
     public class FlightDB
     {
-        
-        public static bool IsGettingData { get; set;} = false;
-        
-        
+
+        public static bool IsGettingData { get; set; } = false;
+
+
 
         public static async Task<List<Flight>> GetFlights(DateTime date)
         {
@@ -72,7 +77,7 @@ namespace FlightData
             {
                 IsGettingData = true;
             }
-            string url = $"http://localhost:5018/api/flights/{date:yyyy-MM-dd}";
+            string url = $"http://localhost:5018/api/Flights/{date:yyyy-MM-dd}";
             RestClient client = new RestClient();
 
             RestRequest request = new RestRequest(url, Method.Get);
@@ -82,78 +87,117 @@ namespace FlightData
             // Create a JsonSerializerSettings object.
             JsonSerializerSettings settings = new JsonSerializerSettings();
 
-// Specify that null values should be ignored during serialization.
+            // Specify that null values should be ignored during serialization.
             settings.NullValueHandling = NullValueHandling.Include;
 
 
             var Flights = JsonConvert.DeserializeObject<List<Flight>>(response.Content, settings);
 
-            
-            
-            
+
+
+
             IsGettingData = false;
             return Flights.ToList();
 
-            
-           
+
+
         }
 
 
-        
-        
+
+
         public static async Task PostRoom(List<Room> data)
         {
             // Set the URL of the API
-            var url = "http://localhost:5018/api/rooms/add";
+            var url = "http://localhost:5018/api/flights";
 
             // Create a new RestClient
             var client = new RestClient();
 
             // Create a new RestRequest
             var request = new RestRequest(url, Method.Post);
+
 
             // Set the request content type to JSON
             request.AddHeader("Content-Type", "application/json");
 
             // Serialize the struct to a JSON string
-            var json = JsonConvert.SerializeObject(data,Formatting.None);
+            var json = JsonConvert.SerializeObject(data, Formatting.None);
+            byte[] bytes = System.Text.Encoding.UTF8.GetBytes(json);
+            string payload = System.Text.Encoding.UTF8.GetString(bytes);
+            //payload = "\"" + payload + "\"";
 
+            payload = JsonConvert.ToString(json);
             // Add the JSON string to the request body
-            request.AddParameter("application/json", json, ParameterType.RequestBody);
+            request.AddParameter("application/json", payload, ParameterType.RequestBody);
 
             // Send the request and get the response
             var response = await client.ExecuteAsync(request);
 
             // Print the response
-            Console.WriteLine(json);
+            Console.WriteLine(response.StatusCode.ToString());
+            Console.WriteLine(response.Content.ToString());
         }
 
-        public async Task<List<Flight>> GetRooms(DateTime date)
+        public static async Task<List<Room>> GetRooms(string hash)
         {
             // Set the URL of the API
-            var url = $"http://localhost:5000/flights?date={date.ToString("d/MM/yyyy")}";
+            var url = $"http://localhost:5018/api/Flights/rooms/{hash}";
 
             // Create a new RestClient
             var client = new RestClient();
 
             // Create a new RestRequest
-            var request = new RestRequest(url, Method.Post);
+            var request = new RestRequest(url, Method.Get);
 
             // Set the request content type to JSON
             request.AddHeader("Content-Type", "application/json");
+            Console.WriteLine(hash);
 
-            
-            
 
-            
+
+
 
             // Send the request and get the response
             var response = await client.ExecuteAsync(request);
 
             // Print the response
-            return JsonConvert.DeserializeObject<List<Flight>>(response.Content); 
+            Console.WriteLine(response.StatusCode);
+            Console.WriteLine("Response " + response.Content);
+            if (response.Content == null)
+            {
+                Console.WriteLine("No flights here...");
+                return null;
+            }
+            if (response.StatusCode != System.Net.HttpStatusCode.OK)
+            {
+                Console.WriteLine(response.Content);
+                return null;
+            }
+            List<Room> rooms = JsonConvert.DeserializeObject<List<Room>>(response.Content);
+            return rooms;
         }
 
+        public static async void DeleteRooms(Room room)
+        {
+            var client = new RestClient("http://localhost:5018");
 
+            var request = new RestRequest("/api/flights", Method.Delete);
+            Console.WriteLine("Room to be deleted: ");
+            Console.WriteLine(room.RoomNumber);
+            Console.WriteLine(room.FlightHash);
+
+            request.AddParameter("hash", room.FlightHash);
+            request.AddParameter("roomnumber", room.RoomNumber);
+
+            var response = await client.ExecuteAsync(request);
+
+            Console.WriteLine(response.Content);
+
+
+        }
     }
 }
+
+
+

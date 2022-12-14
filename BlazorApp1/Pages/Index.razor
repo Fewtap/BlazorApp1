@@ -28,7 +28,12 @@
             if (flights != null)
             {
 
-                DateTime greenlandTime = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(DateTime.UtcNow, "Greenland Standard Time");
+                DateTime greenlandTime = DateTime.UtcNow.AddHours(-3);
+                foreach(var flight in flights)
+                {
+                    Console.WriteLine(flight.Planned.ToString("yyyy:MM:dd hh:mm"));
+                    Console.WriteLine(greenlandTime.ToString("yyyy:MM:dd hh:mm"));
+                }
                 if (flights.Exists(f => f.Planned.Day == greenlandTime.Day && f.Planned.TimeOfDay > greenlandTime.TimeOfDay))
                 {
                     foreach (var flight in flights)
@@ -115,7 +120,7 @@
         while (FlightDB.IsGettingData)
         {
             await Task.Delay(100);
-            flights = await FlightDB.GetFlights(DateTime.Now.AddHours(-3));
+            flights = await FlightDB.GetFlights(DateTime.UtcNow.AddHours(-3));
 
 
 
@@ -125,7 +130,7 @@
     void UpdateTime(object _)
         {
             DateTime greenlandTime;
-            greenlandTime = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(DateTime.UtcNow, "Greenland Standard Time");
+            greenlandTime = DateTime.UtcNow.AddHours(-3);
             _timeString = greenlandTime.ToLongTimeString();
 
             InvokeAsync(StateHasChanged);
@@ -141,7 +146,7 @@
                 return;
                 
             }
-            newFlights = await FlightDB.GetFlights(DateTime.Now.AddHours(-3));
+            newFlights = await FlightDB.GetFlights(DateTime.UtcNow.AddHours(-3));
 
             if (newFlights != null)
             {
@@ -153,6 +158,8 @@
 
 
         }
+
+        
 
         public void Dispose()
         {

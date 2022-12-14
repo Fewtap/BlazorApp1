@@ -2,72 +2,71 @@
 @using Microsoft.AspNetCore.Components
 @using FlightData;
 @using Syncfusion.Blazor;
+
+
 @implements IDisposable;
 
 
-<input type="date" @onchange="DateChanged" value="@_selectedDate.ToString("yyyy-MM-dd")"/>
+<input type="date" @onchange="DateChanged" value="@_selectedDate.ToString("yyyy-MM-dd")" />
 
 <select @onchange="FlightChanged">
-    @if(flights != null)
+    @if (flights != null)
     {
         foreach (var flight in flights.FindAll(f => f.Planned.Date == _selectedDate.Date))
         {
-            <option value="@flight.Rute">@flight.ArrivalAirport</option>
+            <option value="@flight.FlightHash">@flight.ArrivalAirport</option>
         }
     }
-    
+
 </select>
 
+<input type="text" @bind="InputValue" @oninput="UpdateInputValue" @onkeydown="SubmitEvent" placeholder="Enter room numbers, separated by commas" />
 
-<input type="text" @bind="InputValue" @oninput="UpdateInputValue" @onkeydown="SubmitEvent" placeholder="Enter room numbers, separated by commas"/>
+
+@if(flights != null)
+{
+    @if(flights.Count != 0)
+    {      
+        foreach(var flight in flights)
+        {
+            @if(currentRooms.Any(r => r.FlightHash == flight.FlightHash))
+            {
+            
+                <div class="card">
+                    <h1 class="card-title">
+                        Flight number: @flight.Rute <br>
+                        Bus Departure: @flight.Planned.AddMinutes(-90)<br>
+                        Destination: @flight.ArrivalAirport
+                    </h1>
+                    <div class="card-body">
+                        <h2>Rooms:</h2>
+                        <ul>
+                            @foreach(var room in currentRooms.FindAll(r => r.FlightHash == flight.FlightHash))
+                            {
+								<li class="RoomLabel">
+									<button class="button" @onclick="((e) => DeleteRoom(e,room))">Delete</button>@room.RoomNumber</li>
+							}
+                        </ul>
+                    </div>
+                </div>
+            }
+            else
+            {
+                continue;
+            }
+
+        }
+    }
+}
 
 
+    
+    
 
 
 @code {
     string InputValue = "";
-
-    void UpdateInputValue(ChangeEventArgs e)
-    {
-    // Update the InputValue property with the latest input value
-        InputValue = e.Value.ToString();
-    }
-    
-    void SubmitEvent(KeyboardEventArgs e)
-    {
-        if (e.Key == "Enter" && !string.IsNullOrEmpty(InputValue))
-        {
-			var rooms = InputValue.Split(',').Select(r => r.Trim()).ToList();
-            Console.WriteLine(rooms.Count.ToString());
-			var flight = flights.Find(f => f.FlightHash == _selectedFlight.FlightHash);
-            List<Room> roomstoinsert = new List<Room>();
-            foreach (var room in rooms)
-            {
-                roomstoinsert.Add(new Room(room, flight.FlightHash));
-            }
-            Task.Run(() => FlightDB.PostRoom(roomstoinsert));
-			InputValue = "";
-		}
-
-    // Update the component to reflect the changes
-            InvokeAsync(StateHasChanged);
-
-
-            
-        }
-    }
-
-
-}
-
-
-
-
-
-
-@code {
-
-    public Timer timer;
+    Timer timer;
     string _ruteString = "";
     DateTime _selectedDate = DateTime.Now;
     Flight _selectedFlight = new();
@@ -76,52 +75,60 @@
     string _roomString;
     InputDate<DateTime> help = new();
     List<Flight> newflights;
+    List<Room> currentRooms = new List<Room>();
 
     protected override async void OnInitialized()
     {
-        var title = "Getting Data";
         timer = new Timer(UpdatePage, null, 0, 20);
-        _selectedDate = DateTime.UtcNow.Subtract(TimeSpan.FromHours(3)).AddDays(1);
+        _selectedDate = DateTime.UtcNow.Subtract(TimeSpan.FromHours(3));
         while (FlightDB.IsGettingData)
         {
             await Task.Delay(100);
-            
-
-
-
         }
         flights = await FlightDB.GetFlights(_selectedDate);
-        
-
-
-
-        
-
         InvokeAsync(StateHasChanged);
-        
 
         _selectedFlight = flights.First(f => f.Planned.Date == _selectedDate.Date);
         _ruteString = _selectedFlight.Rute;
+        if(flights == null)
+        {
+            await Task.Delay(50);
+        }
+        UpdateRooms(flights);
         if (_selectedFlight != null)
         {
             Console.WriteLine(_selectedFlight.Rute + " " + _selectedFlight.ArrivalAirport);
         }
     }
-
 
     void FlightChanged(ChangeEventArgs args)
     {
-        _selectedFlight = flights.Find(f => f.Planned.Date == _selectedDate.Date && f.Rute == args.Value.ToString());
+        _selectedFlight = flights.Find(f => f.Planned.Date == _selectedDate.Date && f.FlightHash == args.Value.ToString());
+
         if (_selectedFlight != null)
         {
             Console.WriteLine(_selectedFlight.Rute + " " + _selectedFlight.ArrivalAirport);
         }
     }
 
-    void DateChanged(ChangeEventArgs args)
+    async void DateChanged(ChangeEventArgs args)
     {
+        List<Flight> newFlights;
         _selectedDate = DateTime.Parse(args.Value.ToString());
+        newflights = await FlightDB.GetFlights(_selectedDate);
+        bool found = false;
+        while(newflights == null)
+        {
+            await Task.Delay(100);
+        }
+
+        flights = newflights;
+
+
+
         _selectedFlight = flights.First(f => f.Planned.Date == _selectedDate.Date);
+
+        UpdateRooms(flights);
         Console.WriteLine(_selectedDate.ToShortDateString());
         if (_selectedFlight != null)
         {
@@ -129,6 +136,10 @@
         }
     }
 
+    async void DeleteRoom(MouseEventArgs args, Room room)
+    {
+        FlightDB.DeleteRooms(room);
+    }
 
     async void UpdatePage(object _)
     {
@@ -136,24 +147,70 @@
         {
             return;
         }
-
         List<Flight> newFlights;
         newFlights = await FlightDB.GetFlights(_selectedDate);
-        if(newFlights != null)
+
+        
+
+        if (newFlights != null)
         {
             flights = newFlights;
         }
 
+        UpdateRooms(flights);
 
+        
         InvokeAsync(StateHasChanged);
     }
 
+    void UpdateInputValue(ChangeEventArgs e)
+    {
+        InputValue = e.Value.ToString();
+    }
+
+    async void SubmitEvent(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !string.IsNullOrEmpty(InputValue))
+        {
+            while(_selectedFlight == null)
+            {
+                Thread.Sleep(20);
+            }
+            var rooms = InputValue.Split(',').Select(r => r.Trim()).ToList();
+            Console.WriteLine(rooms.Count.ToString());
+            var flight = flights.Find(f => f.FlightHash == _selectedFlight.FlightHash);
+            List<Room> roomstoinsert = new List<Room>();
+            foreach (var room in rooms)
+            {
+                roomstoinsert.Add(new Room(room, flight.FlightHash));
+            }
+            await FlightDB.PostRoom(roomstoinsert);
+            InputValue = "";
+        }
+
+        
+        InvokeAsync(StateHasChanged);
+    }
+
+
+    
 
     public void Dispose()
     {
         timer.Dispose();
     }
 
+    public async void UpdateRooms(List<Flight> flights)
+    {
+        List<Room> newRooms = new();
+        foreach(var flight in flights)
+        {
+            newRooms.AddRange(await FlightDB.GetRooms(flight.FlightHash));
+        }
 
-
+        if(newRooms.Count != 0)
+        {
+            currentRooms = newRooms;
+        }
+    }
 }
