@@ -1,10 +1,11 @@
 ﻿@page "/test"
 @using Microsoft.AspNetCore.Components
 @using FlightData;
-@using Syncfusion.Blazor;
+
 
 
 @implements IDisposable;
+
 
 
 <input type="date" @onchange="DateChanged" value="@_selectedDate.ToString("yyyy-MM-dd")" />
@@ -14,14 +15,13 @@
     {
         foreach (var flight in flights.FindAll(f => f.Planned.Date == _selectedDate.Date))
         {
-            <option value="@flight.FlightHash">@flight.ArrivalAirport</option>
+            <option value="@flight.FlightHash">@flight.ArrivalAirport   @flight.Rute</option>
         }
     }
 
 </select>
 
 <input type="text" @bind="InputValue" @oninput="UpdateInputValue" @onkeydown="SubmitEvent" placeholder="Enter room numbers, separated by commas" />
-
 
 @if(flights != null)
 {
@@ -35,7 +35,7 @@
                 <div class="card">
                     <h1 class="card-title">
                         Flight number: @flight.Rute <br>
-                        Bus Departure: @flight.Planned.AddMinutes(-90)<br>
+                        Bus Departure: @flight.Planned.AddMinutes(-90).ToString("HH':'mm")<br>
                         Destination: @flight.ArrivalAirport
                     </h1>
                     <div class="card-body">
@@ -76,10 +76,14 @@
     InputDate<DateTime> help = new();
     List<Flight> newflights;
     List<Room> currentRooms = new List<Room>();
+    bool loading = false;
+    
+
 
     protected override async void OnInitialized()
     {
-        timer = new Timer(UpdatePage, null, 0, 20);
+        
+        timer = new Timer(UpdatePage, null, 0, 500);
         _selectedDate = DateTime.UtcNow.Subtract(TimeSpan.FromHours(3));
         while (FlightDB.IsGettingData)
         {
@@ -99,20 +103,26 @@
         {
             Console.WriteLine(_selectedFlight.Rute + " " + _selectedFlight.ArrivalAirport);
         }
+
+      
+        
     }
 
     void FlightChanged(ChangeEventArgs args)
     {
+        
         _selectedFlight = flights.Find(f => f.Planned.Date == _selectedDate.Date && f.FlightHash == args.Value.ToString());
 
         if (_selectedFlight != null)
         {
             Console.WriteLine(_selectedFlight.Rute + " " + _selectedFlight.ArrivalAirport);
         }
+        
     }
 
     async void DateChanged(ChangeEventArgs args)
     {
+        
         List<Flight> newFlights;
         _selectedDate = DateTime.Parse(args.Value.ToString());
         newflights = await FlightDB.GetFlights(_selectedDate);
@@ -134,6 +144,7 @@
         {
             Console.WriteLine(_selectedFlight.Rute + " " + _selectedFlight.ArrivalAirport);
         }
+        
     }
 
     async void DeleteRoom(MouseEventArgs args, Room room)
@@ -143,6 +154,7 @@
 
     async void UpdatePage(object _)
     {
+        Console.WriteLine(loading);
         if (FlightDB.IsGettingData)
         {
             return;
@@ -170,7 +182,7 @@
 
     async void SubmitEvent(KeyboardEventArgs e)
     {
-        if (e.Key == "Enter" && !string.IsNullOrEmpty(InputValue))
+        if (e.Key == "Enter" && !string.IsNullOrEmpty(InputValue) && !string.IsNullOrWhiteSpace(InputValue))
         {
             while(_selectedFlight == null)
             {

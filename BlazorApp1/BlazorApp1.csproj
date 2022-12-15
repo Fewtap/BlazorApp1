@@ -9,12 +9,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Append.Blazor.Printing" Version="1.1.0" />
     <PackageReference Include="Dapper" Version="2.0.123" />
+    <PackageReference Include="itext7" Version="7.2.4" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.17.0" />
     <PackageReference Include="MySqlConnector" Version="2.2.2" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
     <PackageReference Include="RestSharp" Version="108.0.3" />
     <PackageReference Include="Syncfusion.Blazor" Version="20.3.0.61" />
+    <PackageReference Include="Syncfusion.Blazor.Themes" Version="20.3.0.61" />
     <PackageReference Include="System.Data.SqlClient" Version="4.8.5" />
   </ItemGroup>
 

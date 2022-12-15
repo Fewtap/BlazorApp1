@@ -9,9 +9,9 @@
 <PageTitle>Index</PageTitle>
 
 
-	<h1 style="text-align:center; margin:20px; padding-top:200px;">Departures  @_timeString</h1>
+	<h1 style="text-align:center;margin-right:auto; margin-left:auto; margin-top:200px;">Departures  @_timeString</h1>
 
-<table style="margin-left:auto; margin-right:auto;">
+<table id="mainTable">
     <thead>
         <tr style="text-align: inherit;">
             <th class="headerTitle">Route</th>
@@ -34,10 +34,11 @@
                     Console.WriteLine(flight.Planned.ToString("yyyy:MM:dd hh:mm"));
                     Console.WriteLine(greenlandTime.ToString("yyyy:MM:dd hh:mm"));
                 }
-                if (flights.Exists(f => f.Planned.Day == greenlandTime.Day && f.Planned.TimeOfDay > greenlandTime.TimeOfDay))
+                if (flights.Exists(f => f.Planned.Day == greenlandTime.Day))
                 {
                     foreach (var flight in flights)
                     {
+                        string ifDeparted = "HasNotDepartedRow";
                         if (flight.Planned.Date > DateTime.Now.AddHours(-3).Date)
                         {
                             continue;
@@ -49,44 +50,40 @@
                                 DateTime estimated = (DateTime)flight.Estimated;
                                 if (estimated.Subtract(TimeSpan.FromMinutes(90)) < DateTime.Now.AddHours(-3))
                                 {
-                                    continue;
+                                    ifDeparted = "HasDepartedRow";
                                 }
                             }
                             else
                             {
-                                continue;
+								ifDeparted = "HasDepartedRow";
                             }
                         }
                         DateTime estimatedDate;
                         string estimatedString;
-
-                        if (flight.Estimated != null)
-                        {
-
-                        }
+                        
                         <tr style="text-align: inherit;">
-                            <td class="rowElements">@flight.Rute</td>
-                            <td class="rowElements">@flight.ArrivalAirport</td>
-                            <td class="rowElements">@flight.Planned.ToShortTimeString()</td>
+                            <td class="@ifDeparted">@flight.Rute</td>
+                            <td class="@ifDeparted">@flight.ArrivalAirport</td>
+                            <td class="@ifDeparted">@flight.Planned.ToShortTimeString()</td>
                             @if (flight.Estimated == null)
                             {
-                                <th class="rowElements">@flight.Estimated</th>
+                                <th class="@ifDeparted">@flight.Estimated</th>
                             }
                             else
                             {
                                 estimatedDate = (DateTime)flight.Estimated;
                                 estimatedString = estimatedDate.ToShortTimeString();
-                                <td class="rowElements">@estimatedString</td>
+                                <td class="@ifDeparted">@estimatedString</td>
                             }
-                            <td class="rowElements">@flight.StatusEn</td>
+                            <td class="@ifDeparted">@flight.StatusEn</td>
                             @if (flight.Estimated != null)
                             {
                                 estimatedDate = (DateTime)flight.Estimated;
-                                <td class="rowElements">@estimatedDate.Subtract(TimeSpan.FromMinutes(90)).ToShortTimeString()</td>
+                                <td class="@ifDeparted">@estimatedDate.Subtract(TimeSpan.FromMinutes(90)).ToShortTimeString()</td>
                             }
                             else
                             {
-                                <td class="rowElements">@flight.Planned.Subtract(TimeSpan.FromMinutes(90)).ToShortTimeString()</td>
+                                <td class="@ifDeparted">@flight.Planned.Subtract(TimeSpan.FromMinutes(90)).ToShortTimeString()</td>
                             }
                         </tr>
 
@@ -102,14 +99,18 @@
     </tbody>
 </table>
 
+
+
 <!--<iframe style="padding-top:50px; margin-left:auto; margin-right:auto; display:block;" height="650" width="900"src="https://embed.windy.com/embed2.html?lat=67.776&lon=-51.196&detailLat=69.225&detailLon=-51.416&width=900&height=900&zoom=5&level=surface&overlay=temp&product=ecmwf&menu=&message=&marker=true&calendar=12&pressure=&type=map&location=coordinates&detail=true&metricWind=m%2Fs&metricTemp=default&radarRange=-1" frameborder="0"></iframe>-->
 
 
 @code {
-    string _timeString = DateTime.Now.AddHours(-3).ToLongTimeString();
+    string _timeString = DateTime.Now.AddHours(-3).ToString("HH':'mm':'ss");
     Timer _showTimeTimer = null!;
     Timer? _updateFlightsTimer;
     List<Flight> flights = null!;
+    string table = "Flight Table: \n";
+
 
     //Write a fucntion that returns a Flight object
 
@@ -125,13 +126,34 @@
 
 
         }
+
+        while(flights == null)
+        {
+            await Task.Delay(200);
+        }
+        
+        table += String.Format("{0,-10} {1,-20} {2,-20} {3,-20} {4,-20} {5,-20} {6,-20} {7,-20} {8,-20} \n", "Rute", "DepartureAirport", "ArrivalAirport", "Planned", "Estimated", "StatusKL", "StatusEn", "StatusDa", "FlightHash");
+        foreach (Flight flight in flights)
+        {
+            table += String.Format("{0,-10} {1,-20} {2,-20} {3,-20} {4,-20} {5,-20} {6,-20} {7,-20} {8,-20} \n",
+                flight.Rute,
+                flight.DepartureAirport,
+                flight.ArrivalAirport,
+                flight.Planned,
+                flight.Estimated,
+                flight.StatusKl,
+                flight.StatusEn,
+                flight.StatusDa,
+                flight.FlightHash);
+        }
+        Console.WriteLine(table);
     }
 
     void UpdateTime(object _)
         {
             DateTime greenlandTime;
             greenlandTime = DateTime.UtcNow.AddHours(-3);
-            _timeString = greenlandTime.ToLongTimeString();
+            _timeString = greenlandTime.ToString("HH':'mm':'ss");
 
             InvokeAsync(StateHasChanged);
         }
