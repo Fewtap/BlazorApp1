@@ -2,8 +2,9 @@
 
 
 #mainTable {
-    height: auto;
-    width:auto;
+    /*height: auto;
+    width:auto;*/
+    
     margin-right: auto;
     margin-left: auto;
 }
@@ -11,7 +12,9 @@
 table, th, td {
     text-align: center;
     border: ridge;
-    background-image: radial-gradient(to bottom right, #ADDDFF,#DBB67F)
+    background-image: radial-gradient(to bottom right, #ADDDFF,#DBB67F);
+    padding:2px;
+    
     
 }
 
@@ -38,8 +41,16 @@ th{
 
 .HasDepartedRow {
     font-size: 20px;
-    color: indianred;
+    text-decoration:line-through;
 }
+td:first-child {
+    position: sticky;
+    left: 0;
+    width: 20px;
+    background-color: #DBB67F;
+}
+
+
 
 /* Add a black background color to the top navigation */
 .topnav {
@@ -122,4 +133,30 @@ li{
     .button:hover {
         box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19); /* Add a shadow when the button is hovered over */
         background-color: #3e8e41; /* Darken the background color when the button is hovered over */
+    }
+
+    .card{
+        box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+        max-width:300px;
+        margin:auto;
+        text-align:center;
+        font-family:Arial;
+        margin: 20px;
+    }
+
+    .card-title{
+        color: grey;
+        font-size: 18px;
+        
+    }
+
+.card-content {
+    padding: 20px;
+    text-align: left;
+    transition: ease-in-out;
+}
+
+    .show-more-button{
+        cursor: pointer;
+        color: blue;
     }

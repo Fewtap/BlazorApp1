@@ -2,102 +2,192 @@
 @using FlightData;
 @using Syncfusion.Blazor.Diagrams
 @implements IDisposable
+@inject IJSRuntime jsRuntime;
 
 @page "/"
 
 
 <PageTitle>Index</PageTitle>
+	
+	<h1>@isDevice</h1>
+@if(isDevice == "Mobile")
+{
+	
+	if (flights != null)
+	{
+
+		DateTime greenlandTime = DateTime.UtcNow.AddHours(-3);
+		foreach (var flight in flights)
+		{
+			Console.WriteLine(flight.Planned.ToString("yyyy:MM:dd hh:mm"));
+			Console.WriteLine(greenlandTime.ToString("yyyy:MM:dd hh:mm"));
+		}
+		if (flights.Exists(f => f.Planned.Day == greenlandTime.Day))
+		{
+			foreach (var flight in flights)
+			{
+				string ifDeparted = "HasNotDepartedRow";
+				if (flight.Planned.Date > DateTime.Now.AddHours(-3).Date)
+				{
+					continue;
+				}
+				if (flight.Planned.Subtract(TimeSpan.FromMinutes(90)) < DateTime.Now.AddHours(-3))
+				{
+					if (flight.Estimated != null)
+					{
+						DateTime estimated = (DateTime)flight.Estimated;
+						if (estimated.Subtract(TimeSpan.FromMinutes(90)) < DateTime.Now.AddHours(-3))
+						{
+							ifDeparted = "HasDepartedRow";
+						}
+					}
+					else
+					{
+						ifDeparted = "HasDepartedRow";
+					}
+				}
+				DateTime estimatedDate;
+				string estimatedString;
+				<div class="card">
+					<div class="card-title">
+						@flight.Rute<br>
+						@flight.ArrivalAirport
+					</div>
+					<div class="card-content" style="display:@cardbodydisplay[flights.FindIndex(f => f.FlightHash == flight.FlightHash)];">
+
+					<p>Planned: @flight.Planned.ToShortTimeString()</p>
+					@if (flight.Estimated == null)
+					{
+						
+					}
+					else
+					{
+						estimatedDate = (DateTime)flight.Estimated;
+						estimatedString = estimatedDate.ToShortTimeString();
+						<p >Estiamted: @estimatedString</p>
+					}
+					<p>Status: @flight.StatusEn</p>
+					@if (flight.Estimated != null)
+					{
+						estimatedDate = (DateTime)flight.Estimated;
+						<p>Bus Deoarture: @estimatedDate.Subtract(TimeSpan.FromMinutes(90)).ToShortTimeString()</p>
+					}
+					else
+					{
+						<p>Bus Departure: @flight.Planned.Subtract(TimeSpan.FromMinutes(90)).ToShortTimeString()</p>
+					}
+					</div>
+
+					<button @onclick="(args) => ShowMoreButtonClicked(args,flights.FindIndex(f => f.FlightHash == flight.FlightHash))">@ButtonsTexts[flights.IndexOf(flight)]</button>
+				</div>
 
 
+
+
+			}
+		}
+	}
+
+
+
+}
+else
+{
 	<h1 style="text-align:center;margin-right:auto; margin-left:auto; margin-top:200px;">Departures  @_timeString</h1>
+	<div id="tablediv">
+		<table id="mainTable">
+			<thead>
+				<tr>
+					<th class="headerTitle">Route</th>
+					<th class="headerTitle">Destination</th>
+					<th class="headerTitle">Planned</th>
+					<th class="headerTitle">Estimated</th>
+					<th class="headerTitle">Status</th>
+					<th class="headerTitle">Bus Departure</th>
+				</tr>
+			</thead>
+			<tbody>
 
-<table id="mainTable">
-    <thead>
-        <tr style="text-align: inherit;">
-            <th class="headerTitle">Route</th>
-            <th class="headerTitle">Destination</th>
-            <th class="headerTitle">Planned</th>
-            <th class="headerTitle">Estimated</th>
-            <th class="headerTitle">Status</th> 
-            <th class="headerTitle">Bus Departure</th>
-        </tr>
-    </thead>
-    <tbody>
+				@{
+					if (flights != null)
+					{
 
-        @{
-            if (flights != null)
-            {
+						DateTime greenlandTime = DateTime.UtcNow.AddHours(-3);
+						foreach (var flight in flights)
+						{
+							Console.WriteLine(flight.Planned.ToString("yyyy:MM:dd hh:mm"));
+							Console.WriteLine(greenlandTime.ToString("yyyy:MM:dd hh:mm"));
+						}
+						if (flights.Exists(f => f.Planned.Day == greenlandTime.Day))
+						{
+							foreach (var flight in flights)
+							{
+								string ifDeparted = "HasNotDepartedRow";
+								if (flight.Planned.Date > DateTime.Now.AddHours(-3).Date)
+								{
+									continue;
+								}
+								if (flight.Planned.Subtract(TimeSpan.FromMinutes(90)) < DateTime.Now.AddHours(-3))
+								{
+									if (flight.Estimated != null)
+									{
+										DateTime estimated = (DateTime)flight.Estimated;
+										if (estimated.Subtract(TimeSpan.FromMinutes(90)) < DateTime.Now.AddHours(-3))
+										{
+											ifDeparted = "HasDepartedRow";
+										}
+									}
+									else
+									{
+										ifDeparted = "HasDepartedRow";
+									}
+								}
+								DateTime estimatedDate;
+								string estimatedString;
 
-                DateTime greenlandTime = DateTime.UtcNow.AddHours(-3);
-                foreach(var flight in flights)
-                {
-                    Console.WriteLine(flight.Planned.ToString("yyyy:MM:dd hh:mm"));
-                    Console.WriteLine(greenlandTime.ToString("yyyy:MM:dd hh:mm"));
-                }
-                if (flights.Exists(f => f.Planned.Day == greenlandTime.Day))
-                {
-                    foreach (var flight in flights)
-                    {
-                        string ifDeparted = "HasNotDepartedRow";
-                        if (flight.Planned.Date > DateTime.Now.AddHours(-3).Date)
-                        {
-                            continue;
-                        }
-                        if (flight.Planned.Subtract(TimeSpan.FromMinutes(90)) < DateTime.Now.AddHours(-3))
-                        {
-                            if (flight.Estimated != null)
-                            {
-                                DateTime estimated = (DateTime)flight.Estimated;
-                                if (estimated.Subtract(TimeSpan.FromMinutes(90)) < DateTime.Now.AddHours(-3))
-                                {
-                                    ifDeparted = "HasDepartedRow";
-                                }
-                            }
-                            else
-                            {
-								ifDeparted = "HasDepartedRow";
-                            }
-                        }
-                        DateTime estimatedDate;
-                        string estimatedString;
-                        
-                        <tr style="text-align: inherit;">
-                            <td class="@ifDeparted">@flight.Rute</td>
-                            <td class="@ifDeparted">@flight.ArrivalAirport</td>
-                            <td class="@ifDeparted">@flight.Planned.ToShortTimeString()</td>
-                            @if (flight.Estimated == null)
-                            {
-                                <th class="@ifDeparted">@flight.Estimated</th>
-                            }
-                            else
-                            {
-                                estimatedDate = (DateTime)flight.Estimated;
-                                estimatedString = estimatedDate.ToShortTimeString();
-                                <td class="@ifDeparted">@estimatedString</td>
-                            }
-                            <td class="@ifDeparted">@flight.StatusEn</td>
-                            @if (flight.Estimated != null)
-                            {
-                                estimatedDate = (DateTime)flight.Estimated;
-                                <td class="@ifDeparted">@estimatedDate.Subtract(TimeSpan.FromMinutes(90)).ToShortTimeString()</td>
-                            }
-                            else
-                            {
-                                <td class="@ifDeparted">@flight.Planned.Subtract(TimeSpan.FromMinutes(90)).ToShortTimeString()</td>
-                            }
-                        </tr>
+								<tr style="text-align: inherit;">
+									<td class="@ifDeparted">@flight.Rute</td>
+									<td class="@ifDeparted">@flight.ArrivalAirport</td>
+									<td class="@ifDeparted">@flight.Planned.ToShortTimeString()</td>
+									@if (flight.Estimated == null)
+									{
+										<th class="@ifDeparted">@flight.Estimated</th>
+									}
+									else
+									{
+										estimatedDate = (DateTime)flight.Estimated;
+										estimatedString = estimatedDate.ToShortTimeString();
+										<td class="@ifDeparted">@estimatedString</td>
+									}
+									<td class="@ifDeparted">@flight.StatusEn</td>
+									@if (flight.Estimated != null)
+									{
+										estimatedDate = (DateTime)flight.Estimated;
+										<td class="@ifDeparted">@estimatedDate.Subtract(TimeSpan.FromMinutes(90)).ToShortTimeString()</td>
+									}
+									else
+									{
+										<td class="@ifDeparted">@flight.Planned.Subtract(TimeSpan.FromMinutes(90)).ToShortTimeString()</td>
+									}
+								</tr>
 
-                    }
-                }
-            }
-        }
+							}
+						}
+					}
+				}
 
-    
-            
-    
-        
-    </tbody>
-</table>
+
+
+
+
+			</tbody>
+		</table>
+	</div>
+}
+
+
+
+
 
 
 
@@ -105,75 +195,138 @@
 
 
 @code {
-    string _timeString = DateTime.Now.AddHours(-3).ToString("HH':'mm':'ss");
-    Timer _showTimeTimer = null!;
-    Timer? _updateFlightsTimer;
-    List<Flight> flights = null!;
-    string table = "Flight Table: \n";
+	string _timeString = DateTime.Now.AddHours(-3).ToString("HH':'mm':'ss");
+	Timer _showTimeTimer = null!;
+	Timer? _updateFlightsTimer;
+	List<Flight> flights = null!;
+	string table = "Flight Table: \n";
+	string isDevice { get; set; }
+	bool mobile { get; set; }
 
 
-    //Write a fucntion that returns a Flight object
-
-    protected override async void OnInitialized()
-    {
-        _showTimeTimer = new Timer(UpdateTime!, null, 0, 1000);
-        _updateFlightsTimer = new Timer(UpdateFlights!, null, 0, 1000);
-        while (FlightDB.IsGettingData)
-        {
-            await Task.Delay(100);
-            flights = await FlightDB.GetFlights(DateTime.UtcNow.AddHours(-3));
+	string contentView = "none";
+	string[] ButtonsTexts;
+	string[] cardbodydisplay;
+	string[] visible;
 
 
 
-        }
+	async void ShowMoreButtonClicked(MouseEventArgs args, int index)
+	{
+		
+		if(ButtonsTexts[index] == "Show More")
+		{
+			ButtonsTexts[index] = "Show Less";
+		}
+		else
+		{
+			ButtonsTexts[index] = "Show More";
+		}
+		if (cardbodydisplay[index] == "none")
+		{
+			cardbodydisplay[index] = "block";
+		}
+		else
+		{
+			cardbodydisplay[index] = "none";
+		}
 
-        while(flights == null)
-        {
-            await Task.Delay(200);
-        }
-        
-        table += String.Format("{0,-10} {1,-20} {2,-20} {3,-20} {4,-20} {5,-20} {6,-20} {7,-20} {8,-20} \n", "Rute", "DepartureAirport", "ArrivalAirport", "Planned", "Estimated", "StatusKL", "StatusEn", "StatusDa", "FlightHash");
-        foreach (Flight flight in flights)
-        {
-            table += String.Format("{0,-10} {1,-20} {2,-20} {3,-20} {4,-20} {5,-20} {6,-20} {7,-20} {8,-20} \n",
-                flight.Rute,
-                flight.DepartureAirport,
-                flight.ArrivalAirport,
-                flight.Planned,
-                flight.Estimated,
-                flight.StatusKl,
-                flight.StatusEn,
-                flight.StatusDa,
-                flight.FlightHash);
-        }
-        Console.WriteLine(table);
-    }
+		InvokeAsync(StateHasChanged);
+
+		
+	}
+
+	//Write a fucntion that returns a Flight object
+
+	protected override async void OnInitialized()
+	{
+
+		_showTimeTimer = new Timer(UpdateTime!, null, 0, 1000);
+		_updateFlightsTimer = new Timer(UpdateFlights!, null, 0, 1000);
+		while (FlightDB.IsGettingData)
+		{
+			await Task.Delay(100);
+			flights = await FlightDB.GetFlights(DateTime.UtcNow.AddHours(-3));
+
+
+
+		}
+
+		while(flights == null)
+		{
+			await Task.Delay(200);
+		}
+
+		table += String.Format("{0,-10} {1,-20} {2,-20} {3,-20} {4,-20} {5,-20} {6,-20} {7,-20} {8,-20} \n", "Rute", "DepartureAirport", "ArrivalAirport", "Planned", "Estimated", "StatusKL", "StatusEn", "StatusDa", "FlightHash");
+		foreach (Flight flight in flights)
+		{
+			table += String.Format("{0,-10} {1,-20} {2,-20} {3,-20} {4,-20} {5,-20} {6,-20} {7,-20} {8,-20} \n",
+				flight.Rute,
+				flight.DepartureAirport,
+				flight.ArrivalAirport,
+				flight.Planned,
+				flight.Estimated,
+				flight.StatusKl,
+				flight.StatusEn,
+				flight.StatusDa,
+				flight.FlightHash);
+		}
+
+		ButtonsTexts = new string[flights.Count];
+		for (int i = 0; i < ButtonsTexts.Length; i++)
+		{
+			ButtonsTexts[i] = "Show More";
+		}
+		cardbodydisplay = new string[flights.Count];
+		for (int i = 0; i < ButtonsTexts.Length; i++)
+		{
+			cardbodydisplay[i] = "none";
+		}
+		Console.WriteLine(table);
+
+	}
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		await FindRosponsivness();
+	}
+
+	async void ShowDevice(MouseEventArgs args)
+	{
+		await FindRosponsivness();
+	}
+	public async Task FindRosponsivness()
+	{
+		mobile = await jsRuntime.InvokeAsync<bool>("isDevice");
+		isDevice = mobile ? "Mobile" : "Desktop";
+	}
 
     void UpdateTime(object _)
-        {
-            DateTime greenlandTime;
-            greenlandTime = DateTime.UtcNow.AddHours(-3);
-            _timeString = greenlandTime.ToString("HH':'mm':'ss");
+    {
+        DateTime greenlandTime;
+        greenlandTime = DateTime.UtcNow.AddHours(-3);
+        _timeString = greenlandTime.ToString("HH':'mm':'ss");
 
-            InvokeAsync(StateHasChanged);
+        InvokeAsync(StateHasChanged);
+    }
+
+    int i = 0;
+    List<Flight>? newFlights;
+
+    async void UpdateFlights(object _)
+    {
+        if(FlightDB.IsGettingData)
+        {
+            return;
+
         }
+        newFlights = await FlightDB.GetFlights(DateTime.UtcNow.AddHours(-3));
 
-        int i = 0;
-        List<Flight>? newFlights;
-
-        async void UpdateFlights(object _)
+        if (newFlights != null)
         {
-             if(FlightDB.IsGettingData)
-            {
-                return;
-                
-            }
-            newFlights = await FlightDB.GetFlights(DateTime.UtcNow.AddHours(-3));
-
-            if (newFlights != null)
-            {
-                flights = newFlights;
-            }
+            flights = newFlights;
+            flights.Sort((f1, f2) => f1.Planned.CompareTo(f2.Planned));
+        }
 
 
 
