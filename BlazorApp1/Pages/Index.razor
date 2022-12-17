@@ -10,11 +10,19 @@
 <PageTitle>Index</PageTitle>
 	
 	<h1>@isDevice</h1>
+
+<h1 style="text-align:center;margin-right:auto; margin-left:auto; margin-top:200px;">Departures  @_timeString</h1>
+<h3 style="padding:20px; margin:20px;">
+	@_selectedDate.ToShortDateString()<button class="button date" @onclick="(e) => ChangeDateOnClick(e, _selectedDate.AddHours(-3).AddDays(-1))">&#8592</button>
+	<button class="button date" @onclick="(e) => ChangeDateOnClick(e, _selectedDate.AddHours(-3).AddDays(1))">&#8594</button>
+</h3>
 @if(isDevice == "Mobile")
 {
 	
+	
 	if (flights != null)
 	{
+
 
 		DateTime greenlandTime = DateTime.UtcNow.AddHours(-3);
 		foreach (var flight in flights)
@@ -22,15 +30,12 @@
 			Console.WriteLine(flight.Planned.ToString("yyyy:MM:dd hh:mm"));
 			Console.WriteLine(greenlandTime.ToString("yyyy:MM:dd hh:mm"));
 		}
-		if (flights.Exists(f => f.Planned.Day == greenlandTime.Day))
+		if (flights.Exists(f => f.Planned.Day == _selectedDate.Day))
 		{
 			foreach (var flight in flights)
 			{
 				string ifDeparted = "HasNotDepartedRow";
-				if (flight.Planned.Date > DateTime.Now.AddHours(-3).Date)
-				{
-					continue;
-				}
+
 				if (flight.Planned.Subtract(TimeSpan.FromMinutes(90)) < DateTime.Now.AddHours(-3))
 				{
 					if (flight.Estimated != null)
@@ -92,8 +97,10 @@
 
 }
 else
-{
-	<h1 style="text-align:center;margin-right:auto; margin-left:auto; margin-top:200px;">Departures  @_timeString</h1>
+{   
+	
+
+	
 	<div id="tablediv">
 		<table id="mainTable">
 			<thead>
@@ -109,8 +116,10 @@ else
 			<tbody>
 
 				@{
+
 					if (flights != null)
 					{
+
 
 						DateTime greenlandTime = DateTime.UtcNow.AddHours(-3);
 						foreach (var flight in flights)
@@ -118,15 +127,12 @@ else
 							Console.WriteLine(flight.Planned.ToString("yyyy:MM:dd hh:mm"));
 							Console.WriteLine(greenlandTime.ToString("yyyy:MM:dd hh:mm"));
 						}
-						if (flights.Exists(f => f.Planned.Day == greenlandTime.Day))
+						if (flights.Exists(f => f.Planned.Day == _selectedDate.Day))
 						{
 							foreach (var flight in flights)
 							{
 								string ifDeparted = "HasNotDepartedRow";
-								if (flight.Planned.Date > DateTime.Now.AddHours(-3).Date)
-								{
-									continue;
-								}
+
 								if (flight.Planned.Subtract(TimeSpan.FromMinutes(90)) < DateTime.Now.AddHours(-3))
 								{
 									if (flight.Estimated != null)
@@ -173,7 +179,19 @@ else
 
 							}
 						}
+						else if(flights.Count != 0 && !flights.Any(f => f.Planned.Day == _selectedDate.Day))
+						{
+							<tr>Loading...</tr>
+						}
+						else
+						{
+							<tr>No flights available at this time</tr>
+						}
+						
+
 					}
+					
+					
 				}
 
 
@@ -202,6 +220,7 @@ else
 	string table = "Flight Table: \n";
 	string isDevice { get; set; }
 	bool mobile { get; set; }
+	DateTime _selectedDate = DateTime.UtcNow.AddHours(-3);
 
 
 	string contentView = "none";
@@ -209,11 +228,21 @@ else
 	string[] cardbodydisplay;
 	string[] visible;
 
-
+	async void ChangeDateOnClick(MouseEventArgs args, DateTime date)
+	{
+		_selectedDate = date;
+		InvokeAsync(StateHasChanged);
+		while (FlightDB.IsGettingData)
+		{
+			await Task.Delay(100);
+		}
+		UpdateFlights(null);
+		UpdateCards();
+	}
 
 	async void ShowMoreButtonClicked(MouseEventArgs args, int index)
 	{
-		
+
 		if(ButtonsTexts[index] == "Show More")
 		{
 			ButtonsTexts[index] = "Show Less";
@@ -233,7 +262,7 @@ else
 
 		InvokeAsync(StateHasChanged);
 
-		
+
 	}
 
 	//Write a fucntion that returns a Flight object
@@ -246,7 +275,7 @@ else
 		while (FlightDB.IsGettingData)
 		{
 			await Task.Delay(100);
-			flights = await FlightDB.GetFlights(DateTime.UtcNow.AddHours(-3));
+			flights = await FlightDB.GetFlights(_selectedDate);
 
 
 
@@ -272,6 +301,18 @@ else
 				flight.FlightHash);
 		}
 
+		UpdateCards();
+		Console.WriteLine(table);
+
+	}
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		await FindRosponsivness();
+	}
+
+	void UpdateCards()
+	{
 		ButtonsTexts = new string[flights.Count];
 		for (int i = 0; i < ButtonsTexts.Length; i++)
 		{
@@ -282,13 +323,6 @@ else
 		{
 			cardbodydisplay[i] = "none";
 		}
-		Console.WriteLine(table);
-
-	}
-
-	protected override async Task OnAfterRenderAsync(bool firstRender)
-	{
-		await FindRosponsivness();
 	}
 
 	async void ShowDevice(MouseEventArgs args)
@@ -301,33 +335,33 @@ else
 		isDevice = mobile ? "Mobile" : "Desktop";
 	}
 
-    void UpdateTime(object _)
-    {
-        DateTime greenlandTime;
-        greenlandTime = DateTime.UtcNow.AddHours(-3);
-        _timeString = greenlandTime.ToString("HH':'mm':'ss");
+	void UpdateTime(object _)
+	{
+		DateTime greenlandTime;
+		greenlandTime = DateTime.UtcNow.AddHours(-3);
+		_timeString = greenlandTime.ToString("HH':'mm':'ss");
 
-        InvokeAsync(StateHasChanged);
-    }
+		InvokeAsync(StateHasChanged);
+	}
 
-    int i = 0;
-    List<Flight>? newFlights;
+	int i = 0;
+	List<Flight>? newFlights;
 
-    async void UpdateFlights(object _)
-    {
-        if(FlightDB.IsGettingData)
-        {
-            return;
+	async void UpdateFlights(object _)
+	{
+		if(FlightDB.IsGettingData)
+		{
+			return;
 
-        }
-        newFlights = await FlightDB.GetFlights(DateTime.UtcNow.AddHours(-3));
+		}
+		newFlights = await FlightDB.GetFlights(_selectedDate);
 
-        if (newFlights != null)
-        {
-            flights = newFlights;
-            flights.Sort((f1, f2) => f1.Planned.CompareTo(f2.Planned));
-        }
-
+		if (newFlights != null)
+		{
+			flights = newFlights;
+			flights.Sort((f1, f2) => f1.Planned.CompareTo(f2.Planned));
+		}
+		
 
 
 
